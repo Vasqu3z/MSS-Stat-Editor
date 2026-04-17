@@ -3642,6 +3642,7 @@ def devMode():
         recapList.insert(tk.END, "Dev mode de-activated, edited stats may remain out of safe range\n")
         recapList.configure(state="disabled")
 
+
 #Hitbox functions
 
 def hitboxCheckButton(name):
@@ -3742,7 +3743,7 @@ def changeHitbox():
             message=message+" "+sizeList[i]+","
             for j in range(index,index+size):
                 player=charList.index(comboList[j].lstrip())
-                changedSize[player][i]=stat
+                changedSize[player][i]=float(stat)
     if message!="":
         message=message.rstrip(",")
         if message.find(",")!=-1:
@@ -3765,9 +3766,9 @@ def changeHitboxE():
                 recapList.insert(tk.END, "Unexpected non-numerical value(s)\n")
                 recapList.configure(state="disabled")
                 return
-            message=message+" "+statsList[i]+","
+            message=message+" "+sizeList[i]+","
             for j in range(101):
-                changedSize[j][i]=stat
+                changedSize[j][i]=float(stat)
     if message!="":
         message=message.rstrip(",")
         if message.find(",")!=-1:
@@ -3883,8 +3884,8 @@ def changeSpeed():
         var="speed"+str(i)+"0sb"
         if eval("speed"+str(i)+"0Check").getvar(eval("speed"+str(i)+"0Check").cget("variable"))=="1":
             message=1
-            changedSpeed[i][0] = eval(var+"Base").get()
-            changedSpeed[i][1] = eval(var+"Field").get()
+            changedSpeed[i][0] = float(eval(var+"Base").get())
+            changedSpeed[i][1] = float(eval(var+"Field").get())
     recapList.configure(state="normal")
     if message:
         recapList.insert(tk.END,"Changed speed values\n")
@@ -3961,7 +3962,7 @@ def changeStarGain():
                 recapList.configure(state="disabled")
                 return
             message=message+" "+starEventsList[i]+","
-            changedStarsTeam[iteam][i]=stat
+            changedStarsTeam[iteam][i]=int(stat)
     if message!="":
         message=message.rstrip(",")
         if message.find(",")!=-1:
@@ -3983,7 +3984,7 @@ def changeStarGainE():
                 return
             message=message+" "+starEventsList[i]+","
             for j in range(12):
-                changedStarsTeam[j][i]=stat
+                changedStarsTeam[j][i]=int(stat)
     if message!="":
         message=message.rstrip(",")
         if message.find(",")!=-1:
@@ -4106,8 +4107,8 @@ def changeHandicap():
     
     for i in range(4):
         if eval("estarHandicapCheck"+str(i)).getvar(eval("estarHandicapCheck"+str(i)).cget("variable"))=="1":
-            changedStarHandicap[i][0]= eval("estarHandicapLeadsb"+str(i)).get()
-            changedStarHandicap[i][1]= eval("estarHandicapMultsb"+str(i)).get()
+            changedStarHandicap[i][0]= float(eval("estarHandicapLeadsb"+str(i)).get())
+            changedStarHandicap[i][1]= float(eval("estarHandicapMultsb"+str(i)).get())
             message=1
     fixHandicapParams()
     if message:
@@ -4163,7 +4164,7 @@ def bstarChangeOp(event,name):
 
 def starBoostDisplay():
     for i in range(16):
-        eval("bstarOpcb"+str(i)).set(["Add","Mult"][changedStarBoost[i][0]-1])
+        eval("bstarOpcb"+str(i)).set(["","Add","Mult"][changedStarBoost[i][0]])
         for n in range(3):
             eval("bstar"+["Value","Min","Max"][n]+"sb"+str(i)).set(changedStarBoost[i][n+1])
             
@@ -4172,9 +4173,10 @@ def changeStarBoost():
     for i in range(16):
         if eval("bstarCheck"+str(i)).getvar(eval("bstarCheck"+str(i)).cget("variable"))=="1":
             message=message+" "+starBoostStatsList[i]+","
-            changedStarBoost[i][0]=eval("bstarOpcb"+str(i)).get()
-            for n in range(3):
-                changedStarBoost[i][n+1]=eval("bstar"+["Value","Min","Max"][n]+"sb"+str(i)).get()
+            changedStarBoost[i][0]=["","Add","Mult"].index(eval("bstarOpcb"+str(i)).get())
+            changedStarBoost[i][1]=float(eval("bstarValuesb"+str(i)).get())
+            for n in range(2):
+                changedStarBoost[i][n+2]=int(eval("bstar"+["Min","Max"][n]+"sb"+str(i)).get())
     recapList.configure(state="normal")
     if message!="":
         message=message.rstrip(",")
