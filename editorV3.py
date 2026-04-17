@@ -5,6 +5,7 @@ from functools import partial
 import re
 from inspect import getsourcefile
 from os.path import abspath
+import struct
 
 
 #Big Lists
@@ -78,6 +79,26 @@ statsList = ["pitching arm","batting arm","character class","???","weight",
 trajAllList = ["Medium","High","Low","Group 3","Group 4","Group 5"]
 trajUsed = [1,1,1,0,0,0]
 trajList = ["Medium","High","Low"]
+sizeList = ["Gameplay","Select Screens","regular","facing away","???","height",
+            "???","???","dive","???","jump","???","width","height"]
+speedList = ["Baserunning","Fielding"]
+teamList = ["Fireballs","Knights","Wilds","Monkeys","Monarchs","Flowers",
+            "Eggs","Monsters","Muscles","Spitballs","Bows","Rookies"]
+starEventsList = ["single","double","triple","ground rule double","???",
+                 "solo HR","2HR","3HR","grand slam","???","???","???","???",
+                 "???","???","getting struck out","getting any other out",
+                 "???","???","foul","whiffing a star hit","not steal base",
+                 "???","???","???","???","???","walking","bean balling",
+                 "letting a runner to 1b","letting a HR","per run given",
+                 "strike","out (any)","???","???","???","???","???","???","???"]
+
+starBoostStatsList = ["displayed Pitching","curveball speed","fastball speed",
+                      "curve","??? (Pitch)","displayed batting","slap power",
+                      "charge power","slap contact","charge contact","bunting",
+                      "displayed fielding","displayed speed","fielding","throwing arm","speed"]
+starBoostList = ["add/mult","amount","min","max"]
+pitchingList = ["charge","captain star","curve","Speed Mult","Height"]
+
 
 fieldingAbilitiesList = ["None","Super Dive","Super Jump","Tongue Catch","Suction Catch",
                          "Magical Catch","Piranha Catch","Hammer Throw","Keeper Catch",
@@ -631,6 +652,199 @@ changedTraj=[]
 for L in defaultTraj:
     changedTraj.append(L.copy())
 
+defaultSize = [[1.18,1.1,160,80,70,255,80,330,220,120,80,180,59,210],
+               [1.18,1.1,160,80,70,285,80,440,220,135,80,180,59,240],
+               [1.11,1,210,120,110,295,95,350,360,280,120,230,99,250],
+               [1.18,1.2,130,60,50,195,75,250,160,160,60,150,42,150],
+               [1.18,1.08,140,60,50,285,161,340,180,115,60,160,42,240],
+               [1.18,1.1,140,60,50,265,161,320,280,105,60,160,42,220],
+               [1.18,1.15,160,80,70,240,80,290,220,110,80,180,59,190],
+               [1.2,1.12,130,60,50,215,50,270,160,180,60,150,42,170],
+               [1.2,1.2,130,60,50,225,50,380,160,190,60,150,42,180],
+               [0.95,0.9,270,180,170,315,180,370,440,300,180,290,179,270],
+               [1.18,1.12,190,110,100,255,100,310,280,140,110,210,85,210],
+               [0.9,0.85,140,60,50,375,180,430,180,150,60,160,56,330],
+               [1.18,1.1,150,70,60,225,75,280,200,105,70,170,51,180],
+               [1.5,1.5,120,50,40,175,42,230,140,140,50,140,27,130],
+               [1.2,1.12,130,60,50,205,80,260,160,180,60,150,42,160],
+               [1.7,1.7,120,40,30,165,80,220,140,130,40,140,18,120],
+               [1.2,1.14,140,70,60,225,80,280,280,150,70,170,50,180],
+               [1.18,1.13,170,90,80,245,80,300,240,115,90,190,68,200],
+               [1,1,160,90,80,195,80,250,220,160,90,180,80,150],
+               [1.15,1.14,170,90,80,175,80,230,240,120,90,190,70,130],
+               [1.18,1.12,150,70,60,255,80,410,200,120,70,170,51,210],
+               [1.3,1.12,200,110,100,255,80,330,300,120,110,220,77,210],
+               [1.3,1.12,200,110,100,255,80,330,300,120,110,220,77,210],
+               [1.3,1.12,200,110,100,255,80,330,300,120,110,220,77,210],
+               [1.2,1.13,130,60,50,215,80,270,160,180,60,150,42,170],
+               [1.2,1.13,130,60,50,215,80,270,160,180,60,150,42,170],
+               [1.2,1.13,130,60,50,215,80,270,160,180,60,150,42,170],
+               [1.2,1.2,160,80,70,215,80,270,220,100,80,180,58,170],
+               [1.4,1.5,120,40,30,185,80,250,140,150,40,140,24,150],
+               [1.5,1.5,120,50,40,175,80,230,140,140,50,140,27,130],
+               [1.5,1.5,120,50,40,175,80,230,140,140,50,140,27,130],
+               [1.5,1.5,120,50,40,175,80,230,140,140,50,140,27,130],
+               [1.5,1.5,120,50,40,175,80,230,140,140,50,140,27,130],
+               [1.2,1.15,160,80,70,205,80,260,220,30,80,180,58,160],
+               [1.2,1.15,160,80,70,205,80,260,220,30,80,180,58,160],
+               [1.2,1.15,160,80,70,205,80,260,220,30,80,180,58,160],
+               [1.2,1.15,160,80,70,205,80,260,220,30,80,180,58,160],
+               [1.7,1.6,140,60,50,205,80,260,180,180,60,140,34,160],
+               [0.9,0.75,230,150,130,385,80,430,360,320,140,250,144,360],
+               [1.18,1.18,150,70,60,195,80,250,200,160,70,170,51,150],
+               [1.2,1.1,160,80,70,195,80,250,220,160,80,180,58,150],
+               [1.2,1.1,160,80,70,195,80,350,220,160,80,180,58,150],
+               [1.18,1.1,150,70,60,225,80,280,200,105,70,170,51,180],
+               [1.2,1.12,150,70,60,255,80,410,200,120,70,170,50,210],
+               [1.2,1.14,140,70,60,225,80,280,280,150,70,160,50,180],
+               [1.2,1.14,140,70,60,225,80,280,280,150,70,160,50,180],
+               [1.2,1.14,140,70,60,225,80,280,280,150,70,160,50,180],
+               [1.2,1.14,140,70,60,225,80,280,280,150,70,160,50,180],
+               [1.2,1.12,150,70,60,225,80,280,200,105,70,170,50,180],
+               [1.2,1.12,150,70,60,225,80,280,200,105,70,170,50,180],
+               [1.2,1.12,150,70,60,225,80,280,200,105,70,170,50,180],
+               [1.2,1.12,150,70,60,225,80,280,200,105,70,170,50,180],
+               [1.2,1.2,160,80,70,215,80,270,220,100,80,180,58,170],
+               [1.2,1.2,160,80,70,215,80,270,220,100,80,180,58,170],
+               [0.9,0.8,180,90,80,435,180,490,260,210,90,200,89,390],
+               [1.1,1.1,175,90,85,275,80,330,240,130,90,190,73,230],
+               [1.05,1.05,200,120,110,295,95,350,300,250,120,220,105,250],
+               [1.1,1.1,160,80,70,275,80,330,220,130,80,180,64,230],
+               [1,0.9,190,110,100,315,80,370,280,150,110,210,100,270],
+               [1,0.9,190,110,100,315,80,370,280,150,110,210,100,270],
+               [1,0.9,190,110,100,315,80,370,280,150,110,210,100,270],
+               [1,0.9,190,110,100,315,80,370,280,150,110,210,100,270],
+               [0.9,0.8,240,160,140,395,180,450,380,220,150,260,156,350],
+               [1.2,1.15,130,60,50,225,50,280,160,190,60,150,42,180],
+               [1.2,1.15,130,60,50,225,50,280,260,190,60,150,42,180],
+               [1.2,1.2,130,60,50,255,50,310,160,220,60,150,42,170],
+               [1.18,1.15,160,80,70,240,80,290,220,110,80,180,59,190],
+               [1.18,1.15,160,80,70,240,80,290,220,110,80,180,59,190],
+               [1.18,1.15,160,80,70,240,80,290,220,110,80,180,59,190],
+               [1.18,1.15,160,80,70,240,80,290,220,110,80,180,59,190],
+               [1.18,1.15,160,80,70,240,80,290,220,110,80,180,59,190],
+               [1.18,1.15,120,80,50,195,80,350,140,100,80,185,50,200],
+               [1.18,1.15,120,80,50,190,80,350,140,100,350,185,50,200],
+               [1.5,1.32,120,80,50,185,80,350,140,100,350,185,50,200],
+               [1.3,1.08,120,80,50,185,80,350,140,100,350,185,50,200],
+               [1,1,117,85,75,185,80,335,140,100,335,185,50,200],
+               [1.18,1.1,117,80,75,185,80,335,140,100,335,185,50,200],
+               [1.3,1.3,200,80,70,255,80,330,220,120,80,180,46,220],
+               [1.3,1.3,200,80,70,255,80,330,220,120,80,180,46,220],
+               [1.3,1.3,200,80,70,255,80,330,220,120,80,180,46,220],
+               [1.3,1.3,200,80,70,255,80,330,220,120,80,180,46,220],
+               [1.3,1.3,200,80,70,255,80,330,220,120,80,180,46,220],
+               [1.3,1.3,200,80,70,255,80,330,220,120,80,180,46,220],
+               [1.3,1.3,200,80,70,255,80,330,220,120,80,180,46,220],
+               [1.3,1.3,200,80,70,255,80,330,220,120,80,180,46,220],
+               [1.3,1.3,200,80,70,255,80,330,220,120,80,180,46,220],
+               [1.3,1.3,200,80,70,255,80,330,220,120,80,180,46,220],
+               [1.3,1.3,200,80,70,255,80,330,220,120,80,180,46,220],
+               [1.3,1.3,200,80,70,255,80,330,220,120,80,180,46,220],
+               [1.3,1.3,200,80,70,255,80,330,220,120,80,180,46,220],
+               [1.3,1.3,200,80,70,255,80,330,220,120,80,180,46,220],
+               [1.3,1.3,200,80,70,255,80,330,220,120,80,180,46,220],
+               [1.3,1.3,200,80,70,255,80,330,220,120,80,180,46,220],
+               [1.3,1.3,200,80,70,255,80,330,220,120,80,180,46,220],
+               [1.3,1.3,200,80,70,255,80,330,220,120,80,180,46,220],
+               [1.3,1.3,200,80,70,255,80,330,220,120,80,180,46,220],
+               [1.3,1.3,200,80,70,255,80,330,220,120,80,180,46,220],
+               [1.3,1.3,200,80,70,255,80,330,220,120,80,180,46,220],
+               [1.3,1.3,200,80,70,255,80,330,220,120,80,180,46,220],
+               [1.3,1.3,200,80,70,255,80,330,220,120,80,180,46,220],
+               [1.3,1.3,200,80,70,255,80,330,220,120,80,180,46,220]] 
+changedSize=[]
+for L in defaultSize:
+    changedSize.append(L.copy())
+
+defaultPitching = [[11,1,9,0.7,15],[13,1,9,0.7,20],[27,6,9,0.6,15],[19,1,9,0.7,21],[21,1,9,0.8,15],
+                   [19,6,11,0.7,20],[17,1,9,0.8,15],[25,25,9,0.8,13],[7,7,7,0.8,13],
+                   [7,1,9,0.5,10],[19,6,9,0.7,15],[31,30,9,0.8,40],[15,15,9,0.7,15],
+                   [19,19,9,0.7,15],[25,25,9,0.7,15],[5,5,9,0.7,15],[9,9,9,0.7,15],
+                   [15,1,9,0.7,15],[17,17,7,0.8,25],[9,8,9,0.7,15],[19,19,9,0.7,15],
+                   [19,19,9,0.6,15],[19,19,9,0.6,15],[19,19,9,0.6,15],[9,9,9,1,20],
+                   [9,9,9,1,20],[9,9,9,1,20],[19,19,7,0.6,15],[9,9,9,0.8,15],
+                   [19,19,9,0.9,15],[19,19,9,0.7,15],[19,19,9,0.7,15],[19,19,9,0.7,15],
+                   [25,25,9,0.8,40],[25,25,9,0.8,40],[25,25,9,0.8,40],[25,25,9,0.8,40],
+                   [15,15,9,0.8,15],[33,33,11,0.7,15],[7,7,7,0.7,15],[17,17,7,0.7,16],
+                   [13,13,9,0.7,17],[15,15,9,0.7,15],[19,19,9,0.7,15],[9,9,9,0.7,15],
+                   [9,9,9,0.7,15],[9,9,9,0.7,15],[9,9,9,0.7,15],[11,11,9,0.6,15],
+                   [11,11,9,0.6,15],[11,11,9,0.6,15],[11,11,9,0.6,15],[19,19,7,0.6,15],
+                   [19,19,7,0.8,15],[13,13,9,0.8,10],[15,15,9,1.5,25],[25,25,9,0.7,15],
+                   [27,27,9,0.6,25],[19,19,9,1.1,20],[19,19,9,1.1,20],[19,19,9,1.1,20],
+                   [19,19,9,1.1,20],[27,27,9,0.5,18],[7,7,7,0.8,15],[7,7,9,0.7,15],
+                   [15,15,9,0.6,15],[17,17,9,0.7,15],[17,17,9,0.7,15],[17,17,9,0.7,15],
+                   [17,17,9,0.7,15],[17,17,9,0.7,15],[17,17,9,0.7,15],[17,17,9,0.7,15],
+                   [21,14,9,0.7,15],[21,14,9,0.7,15],[19,14,9,0.7,15],[13,14,9,0.7,15],
+                   [27,27,9,0.7,15],[27,27,9,0.7,15],[27,27,9,0.7,15],[27,27,9,0.7,15],
+                   [27,27,9,0.7,15],[27,27,9,0.7,15],[27,27,9,0.7,15],[27,27,9,0.7,15],
+                   [27,27,9,0.7,15],[27,27,9,0.7,15],[27,27,9,0.7,15],[27,27,9,0.7,15],
+                   [27,27,9,0.7,15],[27,27,9,0.7,15],[27,27,9,0.7,15],[27,27,9,0.7,15],
+                   [27,27,9,0.7,15],[27,27,9,0.7,15],[27,27,9,0.7,15],[27,27,9,0.7,15],
+                   [27,27,9,0.7,15],[27,27,9,0.7,15],[27,27,9,0.7,15],[27,27,9,0.7,15]]
+changedPitching=[]
+for L in defaultPitching:
+    changedPitching.append(L.copy())
+
+defaultSpeed = [[0.122,0.12],[0.125,0.121],[0.127,0.122],[0.129,0.128],[0.131,0.129],
+                [0.133,0.13],[0.135,0.134],[0.138,0.135],[0.141,0.136],[0.144,0.141],
+                [0.147,0.143],[0.15,0.145],[0.154,0.148],[0.158,0.15],[0.163,0.153],
+                [0.166,0.155],[0.169,0.157],[0.172,0.159],[0.175,0.161],[0.178,0.163],
+                [0.18,0.165],[0.18,0.165],[0.158,0.135],[0.162,0.14],[0.164,0.145],
+                [0.167,0.15],[0.169,0.155],[0.172,0.16],[0.174,0.165],[0.178,0.17],
+                [0.181,0.175],[0.185,0.18],[0.188,0.185],[0.192,0.19],[0.197,0.195],
+                [0.202,0.2],[0.208,0.2],[0.211,0.2],[0.215,0.2],[0.218,0.2],
+                [0.222,0.2],[0.226,0.2],[0.228,0.2]]
+changedSpeed=[]
+for L in defaultSpeed:
+    changedSpeed.append(L.copy())
+
+defaultStarsTeam = [[30,40,50,40,40,60,60,60,60,60,60,20,20,20,50,0,0,0,0,10,
+                     -50,10,50,0,40,40,40,0,0,0,0,0,10,30,60,80,0,0,100,0,100],
+                    [30,40,50,40,40,60,60,60,60,60,60,20,20,20,50,0,0,0,0,10,
+                     -50,10,50,0,40,40,40,0,0,0,0,0,10,30,60,80,0,0,100,0,100],
+                    [30,40,50,40,40,60,60,60,60,60,60,20,20,20,50,0,0,0,0,10,
+                     -50,10,50,0,40,40,40,0,0,0,0,0,10,30,60,80,0,0,100,0,100],
+                    [30,40,50,40,40,60,60,60,60,60,60,20,20,20,50,0,0,0,0,10,
+                     -50,10,50,0,40,40,40,0,0,0,0,0,10,30,60,80,0,0,100,0,100],
+                    [30,40,50,40,40,60,60,60,60,60,60,20,20,20,50,0,0,0,0,10,
+                     -50,10,50,0,40,40,40,0,0,0,0,0,10,30,60,80,0,0,100,0,100],
+                    [30,40,50,40,40,60,60,60,60,60,60,20,20,20,50,0,0,0,0,10,
+                     -50,10,50,0,40,40,40,0,0,0,0,0,10,30,60,80,0,0,100,0,100],
+                    [30,40,50,40,40,60,60,60,60,60,60,20,20,20,50,0,0,0,0,10,
+                     -50,10,50,0,40,40,40,0,0,0,0,0,10,30,60,80,0,0,100,0,100],
+                    [30,40,50,40,40,60,60,60,60,60,60,20,20,20,50,0,0,0,0,10,
+                     -50,10,50,0,40,40,40,0,0,0,0,0,10,30,60,80,0,0,100,0,100],
+                    [30,40,50,40,40,60,60,60,60,60,60,20,20,20,50,0,0,0,0,10,
+                     -50,10,50,0,40,40,40,0,0,0,0,0,10,30,60,80,0,0,100,0,100],
+                    [30,40,50,40,40,60,60,60,60,60,60,20,20,20,50,0,0,0,0,10,
+                     -50,10,50,0,40,40,40,0,0,0,0,0,10,30,60,80,0,0,100,0,100],
+                    [30,40,50,40,40,60,60,60,60,60,60,20,20,20,50,0,0,0,0,10,
+                     -50,10,50,0,40,40,40,0,0,0,0,0,10,30,60,80,0,0,100,0,100],
+                    [30,40,50,40,40,60,60,60,60,60,60,20,20,20,50,0,0,0,0,10,
+                     -50,10,50,0,40,40,40,0,0,0,0,0,10,30,60,80,0,0,100,0,100]]
+changedStarsTeam=[]
+for L in defaultStarsTeam:
+    changedStarsTeam.append(L.copy())
+
+defaultStarBoost = [[1,1,0,10],[2,1.1,100,200],[2,1.3,100,200],[2,1.5,0,150],
+                    [2,1.5,0,150],[1,1,0,10],[2,1.1,0,150],[2,1.3,0,150],
+                    [2,1.5,0,150],[2,1.5,0,150],[2,1.5,0,150],[1,1,0,10],
+                    [1,1,0,10],[2,1.5,0,150],[2,1.5,0,150],[2,1.5,0,150]]
+changedStarBoost=[]
+for L in defaultStarBoost:
+    changedStarBoost.append(L.copy())
+
+defaultStarHandicap = [[1,0.7],[3,0.2],[-1,1.1],[-3,1.5]]
+changedStarHandicap=[]
+for L in defaultStarHandicap:
+    changedStarHandicap.append(L.copy())
+    
+defaultHandicapParams=[[2,8,1],[2,24,3]]
+changedHandicapParams=[]
+for L in defaultHandicapParams:
+    changedHandicapParams.append(L.copy())
+
 def getGroupSize(n):
     if n==27 or n==30 or (n>=82 and n%3==1 and n<=115):
         return 2
@@ -643,6 +857,18 @@ def getGroupSize(n):
     if n==75:
         return 6
     return 1
+
+def float2Hex(x):
+    return struct.pack('>f', x).hex()
+
+def int2Hex(x):
+    return struct.pack('>h', x).hex()
+
+def hex2Float(x):
+    return struct.unpack('>f', bytes.fromhex(x))[0]
+
+def hex2Int(x):
+    return struct.unpack('>h', bytes.fromhex(x))[0]
 
 #Chem functions
 
@@ -1167,6 +1393,10 @@ def statCheckButton(name):
     var="sbStat"+name
     if eval("checkStat"+name).getvar(eval("checkStat"+name).cget("variable"))=="0":
         eval(var).configure(state="disabled")
+        if name=="30":
+            checkStatPrecharge.deselect()
+            checkStatPrecharge.configure(state="disabled")
+            sbStatPrecharge.configure(state="disabled")
     else:
         state="normal"
         if name in ["0","1","2","5","6","7","8","9","26","27","29"]:
@@ -1174,18 +1404,21 @@ def statCheckButton(name):
         if name=="7" and sbStat5.get()!="Yes":
             state="disabled"
         eval(var).configure(state=state)
+        if name=="30":
+            checkStatPrecharge.configure(state="normal")
+            sbStatPrecharge.configure(state="readonly")
 
 def statDisplay(clear):
-    if(cbPlayer.get()=="Pick a character/group"):
+    if(cbStatPlayer.get()=="Pick a character/group"):
         return
     if clear:
-        cbPlayer.set("Pick a character/group")
+        cbStatPlayer.set("Pick a character/group")
     else:
-        index=comboList.index(cbPlayer.get())
+        index=comboList.index(cbStatPlayer.get())
         size=getGroupSize(index)
         if size!=1:
             index = index+1
-    for i in range(30):
+    for i in range(35):
         if clear:
             stat=""
         else:
@@ -1194,10 +1427,16 @@ def statDisplay(clear):
             for j in range(index,index+size):
                 player=charList.index(comboList[j].lstrip())
                 if statmin==-1:
-                    statmin=changedStat[player][i]
+                    if i<30:
+                        statmin=changedStat[player][i]
+                    else:
+                        statmin=changedPitching[player][i-30]
                     statmax=statmin
                 elif i not in [0,1,2,5,6,7,8,9,26,27,29]:
-                    value=changedStat[player][i]
+                    if i<30:
+                        value=changedStat[player][i]
+                    else:
+                        value=changedPitching[player][i-30]
                     if statmin>value:
                         statmin=value
                     elif statmax<value:
@@ -1233,6 +1472,14 @@ def statDisplay(clear):
             else:
                 stat=str(statmin)+" - "+str(statmax)
         eval("sbStat"+str(i)).set(stat)
+    precharge=eval("sbStat30").get()
+    if precharge=="" or precharge.find(" - ")!=-1:
+        sbStatPrecharge.set("")
+    elif float(precharge)<8:
+        sbStatPrecharge.set("Yes")
+    else:
+        sbStatPrecharge.set("No")
+        
         
 def statPlayerChange(event):
     statDisplay(0)
@@ -1250,10 +1497,24 @@ def statCaptainChange(event):
         statAllowSwing(1)
     else:
         statAllowSwing(0)
-    
+        
+def statPrechargeChange(event):
+    if sbStatPrecharge.get()=="Yes":
+        if sbStat30.get()!="":
+            if float(sbStat30.get())>7:
+                sbStat30.set("7")
+        else:
+            sbStat30.set("7")
+    if sbStatPrecharge.get()=="No":
+        if sbStat30.get()!="":
+            if float(sbStat30.get())<8:
+                sbStat30.set("8")
+        else:
+            sbStat30.set("8")
+
 def changeStats():
     recapList.configure(state="normal")
-    group=cbPlayer.get()
+    group=cbStatPlayer.get()
     if group=="Pick a character/group":
         recapList.insert(tk.END, "Pick a character/group\n")
         recapList.configure(state="disabled")
@@ -1263,7 +1524,7 @@ def changeStats():
     if size!=1:
         index = index+1
     message=""
-    for i in range(30):
+    for i in range(35):
         if eval("checkStat"+str(i)).getvar(eval("checkStat"+str(i)).cget("variable"))=="1":
             var="sbStat"+str(i)
             stat=eval(var).get()
@@ -1344,23 +1605,43 @@ def changeStats():
                     recapList.configure(state="disabled")
                     return
             else:
-                if stat.isdecimal()==False:
-                    recapList.insert(tk.END, "Unexpected non-numerical value(s)\n")
-                    recapList.configure(state="disabled")
-                    return
+                if i<30:
+                    if stat.isdecimal()==False:
+                        recapList.insert(tk.END, "Unexpected non-numerical value(s)\n")
+                        recapList.configure(state="disabled")
+                        return
+                else:
+                    if stat.replace('.','',1).replace('-','',1).isdecimal()==False:
+                        recapList.insert(tk.END, "Unexpected non-numerical value(s)\n")
+                        recapList.configure(state="disabled")
+                        return
                 low=eval(var).cget("from")
                 high=eval(var).cget("to")
-                stat=int(stat)
+                if i<30:
+                    stat=int(stat)
+                else:
+                    stat=float(stat)
                 if stat<low:
                     stat=low
                     eval(var).set(str(low))
                 elif stat>high:
                     stat=high
                     eval(var).set(str(high))
-            message=message+" "+statsList[i]+","
+            if i<30:
+                message=message+" "+statsList[i]+","
+            else:
+                message=message+" "+pitchingList[i-30]+","
             for j in range(index,index+size):
                 player=charList.index(comboList[j].lstrip())
-                changedStat[player][i]=stat
+                if i<30:
+                    changedStat[player][i]=stat
+                else:
+                    if i==30 and checkStatPrecharge.getvar(checkStatPrecharge.cget("variable")):
+                        if sbStatPrecharge.get=="Yes":
+                            stat = min(changedPitching[player][0],7)
+                        elif sbStatPrecharge.get=="No":
+                            stat = max(changedPitching[player][0],8)
+                    changedPitching[player][i-30]=stat
     if message!="":
         message=message.rstrip(",")
         if message.find(",")!=-1:
@@ -1375,7 +1656,7 @@ def changeStats():
 def changeStatsE():
     recapList.configure(state="normal")
     message=""
-    for i in range(30):
+    for i in range(35):
         if eval("checkStat"+str(i)).getvar(eval("checkStat"+str(i)).cget("variable"))=="1":
             var="sbStat"+str(i)
             stat=eval(var).get()
@@ -1456,22 +1737,42 @@ def changeStatsE():
                     recapList.configure(state="disabled")
                     return
             else:
-                if stat.isdecimal()==False:
-                    recapList.insert(tk.END, "Unexpected non-numerical value(s)\n")
-                    recapList.configure(state="disabled")
-                    return
+                if i<30:
+                    if stat.isdecimal()==False:
+                        recapList.insert(tk.END, "Unexpected non-numerical value(s)\n")
+                        recapList.configure(state="disabled")
+                        return
+                else:
+                    if stat.replace('.','',1).replace('-','',1).isdecimal()==False:
+                        recapList.insert(tk.END, "Unexpected non-numerical value(s)\n")
+                        recapList.configure(state="disabled")
+                        return
                 low=eval(var).cget("from")
                 high=eval(var).cget("to")
-                stat=int(stat)
+                if i<30:
+                    stat=int(stat)
+                else:
+                    stat=float(stat)
                 if stat<low:
                     stat=low
                     eval(var).set(str(low))
                 elif stat>high:
                     stat=high
                     eval(var).set(str(high))
-            message=message+" "+statsList[i]+","
+            if i<30:
+                message=message+" "+statsList[i]+","
+            else:
+                message=message+" "+pitchingList[i-30]+","
             for j in range(101):
-                changedStat[j][i]=stat
+                if i<30:
+                    changedStat[j][i]=stat
+                else:
+                    if i==30 and checkStatPrecharge.getvar(checkStatPrecharge.cget("variable")):
+                        if sbStatPrecharge.get=="Yes":
+                            stat = min(changedPitching[j][0],7)
+                        elif sbStatPrecharge.get=="No":
+                            stat = max(changedPitching[j][0],8)
+                    changedPitching[j][i-30]=stat
     if message!="":
         message=message.rstrip(",")
         if message.find(",")!=-1:
@@ -1482,7 +1783,7 @@ def changeStatsE():
 
 def resetStats():
     recapList.configure(state="normal")
-    group=cbPlayer.get()
+    group=cbStatPlayer.get()
     if group=="Pick a character/group":
         recapList.insert(tk.END, "Pick a character/group\n")
         recapList.configure(state="disabled")
@@ -1492,12 +1793,18 @@ def resetStats():
     if size!=1:
         index = index+1
     message=""
-    for i in range(30):
+    for i in range(35):
         if eval("checkStat"+str(i)).getvar(eval("checkStat"+str(i)).cget("variable"))=="1":
-            message=message+" "+statsList[i]+","
+            if i<30:
+                message=message+" "+statsList[i]+","
+            else:
+                message=message+" "+pitchingList[i-30]+","
             for j in range(index,index+size):
                 player=charList.index(comboList[j].lstrip())
-                changedStat[player][i]=defaultStat[player][i]
+                if i<0:
+                    changedStat[player][i]=defaultStat[player][i]
+                else:
+                    changedPitching[player][i-30]=defaultPitching[player][i-30]
     if message!="":
         message=message.rstrip(",")
         if message.find(",")!=-1:
@@ -1512,7 +1819,7 @@ def resetStats():
 
 def resetStatsA():
     recapList.configure(state="normal")
-    group=cbPlayer.get()
+    group=cbStatPlayer.get()
     if group=="Pick a character/group":
         recapList.insert(tk.END, "Pick a character/group\n")
         recapList.configure(state="disabled")
@@ -1524,6 +1831,7 @@ def resetStatsA():
     for j in range(index,index+size):
         player=charList.index(comboList[j].lstrip())
         changedStat[player]=defaultStat[player].copy()
+        changedPitching[player]=defaultPitching[player].copy()
     group=group.lstrip()+"'"
     if group[-2]!="s":
         group=group+"s"
@@ -1534,11 +1842,17 @@ def resetStatsA():
 def resetStatsE():
     recapList.configure(state="normal")
     message=""
-    for i in range(30):
+    for i in range(35):
         if eval("checkStat"+str(i)).getvar(eval("checkStat"+str(i)).cget("variable"))=="1":
-            message=message+" "+statsList[i]+","
+            if i<30:
+                message=message+" "+statsList[i]+","
+            else:
+                message=message+" "+pitchingList[i-30]+","
             for j in range(101):
-                changedStat[j][i]=defaultStat[j][i]
+                if i<0:
+                    changedStat[j][i]=defaultStat[j][i]
+                else:
+                    changedPitching[j][i-30]=defaultPitching[j][i-30]
     if message!="":
         message=message.rstrip(",")
         if message.find(",")!=-1:
@@ -1546,20 +1860,23 @@ def resetStatsE():
             message=message1[0]+" and "+message1[1]
         recapList.insert(tk.END,"Everyone"+message+" reset\n")
         recapList.configure(state="disabled")
-    if cbPlayer.get()=="Pick a character/group":
+    if cbStatPlayer.get()=="Pick a character/group":
         statDisplay(1)
     else:
         statDisplay(0)
 
 def resetStatsAE():
-    global changedStat
+    global changedStat,changedPitching
     recapList.configure(state="normal")
     changedStat=[]
     for L in defaultStat:
         changedStat.append(L.copy())
+    changedPitching=[]
+    for L in defaultPitching:
+        changedPitching.append(L.copy())
     recapList.insert(tk.END,"Everyone all stats reset\n")
     recapList.configure(state="disabled")
-    if cbPlayer.get()=="Pick a character/group":
+    if cbStatPlayer.get()=="Pick a character/group":
         statDisplay(1)
     else:
         statDisplay(0)
@@ -2162,7 +2479,7 @@ def getStatOffset(j):
     else:
         return 2*j-11
     
-def simpleAdvance(stat,default,L):
+def handicapCode(L):
     is4=L[0]
     is6=L[1]
     count40=L[2]
@@ -2173,7 +2490,31 @@ def simpleAdvance(stat,default,L):
     code=L[7]
     code6=L[8]
     startAddress=L[9]
-    stock41=stock41+hex(stat).lstrip("0x").zfill(2)
+    addresses=["1808ef","1808fb","180903"],["180977","180983","18098b"]
+    
+    for i in range(2):
+        for j in range(3):
+                if changedHandicapParams[i][j]!=defaultHandicapParams[i][j]:
+                    code=code+"00"+addresses[i][j]+hex(changedHandicapParams[i][j]).lstrip("0x").zfill(8)+"\n"
+    
+    L=[is4,is6,count40,count68,count60,stock41,stock42,code,code6,startAddress]  
+    return L.copy()
+    
+def simpleAdvance(stat,default,L,h):
+    is4=L[0]
+    is6=L[1]
+    count40=L[2]
+    count68=L[3]
+    count60=L[4]
+    stock41=L[5]
+    stock42=L[6]
+    code=L[7]
+    code6=L[8]
+    startAddress=L[9]
+    if h:
+        stock41=stock41+stat
+    else:
+        stock41=stock41+hex(stat).lstrip("0x").zfill(2)
     if stat!=default:
         is4=1
     count40=(count40+1)%4
@@ -2181,8 +2522,8 @@ def simpleAdvance(stat,default,L):
     L=[is4,is6,count40,count68,count60,stock41,stock42,code,code6,startAddress]  
     return L.copy()
     
-def advanceCount(stat,default,address,L):
-    L=simpleAdvance(stat,default,L.copy())
+def advanceCount(stat,default,address,L,h):
+    L=simpleAdvance(stat,default,L.copy(),h)
     is4=L[0]
     is6=L[1]
     count40=L[2]
@@ -2266,11 +2607,21 @@ def resetCount(address,L):
     return L.copy()
 
 def geckoGenerate(listPlayers,exclude):
-    baseAddress=7137703
-    baseTraj=6463836
-    baseStamina=6457636
-    baseStarPitchType=6457532
+    baseSpeedField=6445208
+    baseSpeedBase=6447624
     baseTrajHeight=6450824
+    basePitchingWindup=6456320
+    baseStarPitchType=6457532
+    baseStamina=6457636
+    baseChangeUp=6459056
+    baseTraj=6463836
+    baseCatchRange=6465160
+    baseHitbox=6470152
+    baseTeamStars=6470992
+    baseHandicap=6471976
+    baseSizeScale=6482768
+    baseStarBoost=6494424
+    baseAddress=7137703
     lastplayer=listPlayers[0]
     is4=0
     is6=0
@@ -2283,64 +2634,57 @@ def geckoGenerate(listPlayers,exclude):
     code6=""
     startAddress=""
     Lv=[is4,is6,count40,count68,count60,stock41,stock42,code,code6,startAddress]
-    for i in listPlayers: #stats and chem
-        if i==lastplayer+1:
-            Lv = advanceCount(0, 0, baseAddress+142*i, Lv.copy())
-            Lv = advanceCount(0, 0, baseAddress+142*i+1, Lv.copy())
-            Lv = advanceCount(i, i, baseAddress+142*i+2, Lv.copy())
-        else:
-            if i!=lastplayer:
-                Lv=simpleAdvance(0, 0, Lv.copy())
-                if lastplayer%2==0:
-                    Lv=simpleAdvance(0, 0, Lv.copy())
-                    Lv=simpleAdvance(lastplayer+1, lastplayer+1, Lv.copy())
-                Lv = resetCount(baseAddress+142*lastplayer+141-(lastplayer%2)*2,Lv.copy())
-            if i%2==0:
-                Lv=simpleAdvance(0, 0, Lv.copy())
-                Lv=simpleAdvance(i, i, Lv.copy())
-        for j in range(26): #stats
-            if j in [10,11,12,13,14,15,16,17,22,23,24,25]:
-                stat=changedStat[i][j]
-                default=defaultStat[i][j]
-                stat0=stat//256
-                default0=default//256
-                stat1=stat%256
-                default1=default%256
-                Lv = advanceCount(stat0, default0, baseAddress+142*i+getStatOffset(j), Lv.copy())
-                Lv = advanceCount(stat1, default1, baseAddress+142*i+getStatOffset(j)+1, Lv.copy())
-            else:
-                stat=changedStat[i][j]
-                default=defaultStat[i][j]
-                Lv = advanceCount(stat, default, baseAddress+142*i+getStatOffset(j), Lv.copy())
-        for j in range(101): #chem
-            stat=changedChem[i][j]
-            default=defaultChem[i][j]
-            Lv = advanceCount(stat, default, baseAddress+142*i+j+41, Lv.copy())
-        lastplayer=i
-    Lv=simpleAdvance(0, 0, Lv.copy())
-    if lastplayer%2==0:
-        Lv=simpleAdvance(0, 0, Lv.copy())
-        Lv=simpleAdvance(lastplayer+1, lastplayer+1, Lv.copy())
-    Lv = resetCount(baseAddress+142*lastplayer+141-(lastplayer%2)*2,Lv.copy())
     
-    for i in range(101): #traj
-        stat0=changedStat[i][26]
-        stat1=changedStat[i][27]
-        default0=defaultStat[i][26]
-        default1=defaultStat[i][27]
+    Lv = handicapCode(Lv.copy())
+    
+    for i in range(43): #fielding speed
+        stat=float2Hex(changedSpeed[i][1])
+        default=float2Hex(defaultSpeed[i][1])
+        for n in range(4):
+            Lv = advanceCount(stat[n*2:n*2+2], default[n*2:n*2+2], baseSpeedField+i*4+n, Lv.copy(),1)
+    Lv = resetCount(6445376,Lv.copy())
+    
+    for i in range(43): #baserunning speed
+        stat=float2Hex(changedSpeed[i][0])
+        default=float2Hex(defaultSpeed[i][0])
+        for n in range(4):
+            Lv = advanceCount(stat[n*2:n*2+2], default[n*2:n*2+2], baseSpeedBase+i*4+n, Lv.copy(),1)
+    Lv = resetCount(6447792,Lv.copy())
+    
+    for i in range(24): #traj heights
+        for j in range(25):
+            Lv = advanceCount(changedTraj[i][j], defaultTraj[i][j], baseTrajHeight+i*25+j, Lv.copy(),0)
+    Lv = resetCount(6451420,Lv.copy())
+    
+    for i in range(101): #pitching windup
         if i in listPlayers:
-            Lv = advanceCount(stat0, default0, baseTraj+2*i, Lv.copy())
-            Lv = advanceCount(stat1, default1, baseTraj+2*i+1, Lv.copy())
+            for j in range(3):
+                stat=float2Hex(changedPitching[i][j])
+                default=float2Hex(defaultPitching[i][j])
+                for n in range(4):
+                    Lv = advanceCount(stat[n*2:n*2+2], default[n*2:n*2+2], basePitchingWindup+i*12+j*4+n, Lv.copy(),1)
         else:
             if exclude:
-                Lv = advanceCount(default0, default0, baseTraj+2*i, Lv.copy())
-                Lv = advanceCount(default1, default1, baseTraj+2*i+1, Lv.copy())
+                stat=float2Hex(defaultPitching[i][0])
             else:
-                Lv = advanceCount(stat0, stat0, baseTraj+2*i, Lv.copy())
-                Lv = advanceCount(stat1, stat1, baseTraj+2*i+1, Lv.copy())
-    Lv=simpleAdvance(0, 0, Lv.copy())
-    Lv=simpleAdvance(0, 0, Lv.copy())
-    Lv = resetCount(6464036,Lv.copy())
+                stat=float2Hex(changedPitching[i][0])
+            for n in range(4):
+                Lv = advanceCount(stat[n*2:n*2+2], stat[n*2:n*2+2], basePitchingWindup+i*12+n, Lv.copy(),1)
+    
+    for i in range(101): #pitch type
+        stat=changedStat[i][29]
+        default=defaultStat[i][29]
+        if i in listPlayers:
+            Lv = advanceCount(stat, default, baseStarPitchType+i, Lv.copy(),0)
+        else:
+            if exclude:
+                Lv = advanceCount(default, default, baseStarPitchType+i, Lv.copy(),0)
+            else:
+                Lv = advanceCount(stat, stat, baseStarPitchType+i, Lv.copy(),0)
+    Lv=simpleAdvance(0, 0, Lv.copy(),0)
+    Lv=simpleAdvance(0, 0, Lv.copy(),0)
+    Lv=simpleAdvance(0, 0, Lv.copy(),0)
+    Lv = resetCount(6457632,Lv.copy())
     
     for i in range(101): #stamina
         stat=changedStat[i][28]
@@ -2350,38 +2694,173 @@ def geckoGenerate(listPlayers,exclude):
         stat1=stat%256
         default1=default%256
         if i in listPlayers:
-            Lv = advanceCount(stat0, default0, baseStamina+2*i, Lv.copy())
-            Lv = advanceCount(stat1, default1, baseStamina+2*i+1, Lv.copy())
+            Lv = advanceCount(stat0, default0, baseStamina+2*i, Lv.copy(),0)
+            Lv = advanceCount(stat1, default1, baseStamina+2*i+1, Lv.copy(),0)
         else:
             if exclude:
-                Lv = advanceCount(default0, default0, baseStamina+2*i, Lv.copy())
-                Lv = advanceCount(default1, default1, baseStamina+2*i+1, Lv.copy())
+                Lv = advanceCount(default0, default0, baseStamina+2*i, Lv.copy(),0)
+                Lv = advanceCount(default1, default1, baseStamina+2*i+1, Lv.copy(),0)
             else:
-                Lv = advanceCount(stat0, stat0, baseStamina+2*i, Lv.copy())
-                Lv = advanceCount(stat1, stat1, baseStamina+2*i+1, Lv.copy())
-    Lv=simpleAdvance(0, 0, Lv.copy())
-    Lv=simpleAdvance(0, 0, Lv.copy())
+                Lv = advanceCount(stat0, stat0, baseStamina+2*i, Lv.copy(),0)
+                Lv = advanceCount(stat1, stat1, baseStamina+2*i+1, Lv.copy(),0)
+    Lv=simpleAdvance(0, 0, Lv.copy(),0)
+    Lv=simpleAdvance(0, 0, Lv.copy(),0)
     Lv = resetCount(6457836,Lv.copy())
     
-    for i in range(101): #pitch type
-        stat=changedStat[i][29]
-        default=defaultStat[i][29]
+    for i in range(101): #change up
         if i in listPlayers:
-            Lv = advanceCount(stat, default, baseStarPitchType+i, Lv.copy())
+            for j in range(2):
+                stat=float2Hex(changedPitching[i][j+3])
+                default=float2Hex(defaultPitching[i][j+3])
+                for n in range(4):
+                    Lv = advanceCount(stat[n*2:n*2+2], default[n*2:n*2+2], baseChangeUp+i*8+j*4+n, Lv.copy(),1)
         else:
             if exclude:
-                Lv = advanceCount(default, default, baseStarPitchType+i, Lv.copy())
+                stat=float2Hex(defaultPitching[i][3])
             else:
-                Lv = advanceCount(stat, stat, baseStarPitchType+i, Lv.copy())
-    Lv=simpleAdvance(0, 0, Lv.copy())
-    Lv=simpleAdvance(0, 0, Lv.copy())
-    Lv=simpleAdvance(0, 0, Lv.copy())
-    Lv = resetCount(6457632,Lv.copy())
+                stat=float2Hex(changedPitching[i][3])
+            for n in range(4):
+                Lv = advanceCount(stat[n*2:n*2+2], stat[n*2:n*2+2], baseChangeUp+i*8+n, Lv.copy(),1)
+    Lv = resetCount(6459860,Lv.copy())
     
-    for i in range(24): #traj heights
-        for j in range(25):
-            Lv = advanceCount(changedTraj[i][j], defaultTraj[i][j], baseTrajHeight+i*25+j, Lv.copy())
-    Lv = resetCount(6451420,Lv.copy())
+    for i in range(101): #traj
+        stat0=changedStat[i][26]
+        stat1=changedStat[i][27]
+        default0=defaultStat[i][26]
+        default1=defaultStat[i][27]
+        if i in listPlayers:
+            Lv = advanceCount(stat0, default0, baseTraj+2*i, Lv.copy(),0)
+            Lv = advanceCount(stat1, default1, baseTraj+2*i+1, Lv.copy(),0)
+        else:
+            if exclude:
+                Lv = advanceCount(default0, default0, baseTraj+2*i, Lv.copy(),0)
+                Lv = advanceCount(default1, default1, baseTraj+2*i+1, Lv.copy(),0)
+            else:
+                Lv = advanceCount(stat0, stat0, baseTraj+2*i, Lv.copy(),0)
+                Lv = advanceCount(stat1, stat1, baseTraj+2*i+1, Lv.copy(),0)
+    Lv=simpleAdvance(0, 0, Lv.copy(),0)
+    Lv=simpleAdvance(0, 0, Lv.copy(),0)
+    Lv = resetCount(6464036,Lv.copy())
+    
+    for i in range(101): #catch range
+        if i in listPlayers:
+            for j in range(10):
+                stat=float2Hex(changedSize[i][j+2])
+                default=float2Hex(defaultSize[i][j+2])
+                for n in range(4):
+                    Lv = advanceCount(stat[n*2:n*2+2], default[n*2:n*2+2], baseCatchRange+i*40+j*4+n, Lv.copy(),1)
+        else:
+            if exclude:
+                stat=float2Hex(defaultSize[i][2])
+            else:
+                stat=float2Hex(changedSize[i][2])
+            for n in range(4):
+                Lv = advanceCount(stat[n*2:n*2+2], stat[n*2:n*2+2], baseCatchRange+i*40+n, Lv.copy(),1)
+    Lv = resetCount(6469196,Lv.copy())
+    
+    for i in range(101): #hitbox size
+        if i in listPlayers:
+            for j in range(2):
+                stat=float2Hex(changedSize[i][j+12])
+                default=float2Hex(defaultSize[i][j+12])
+                for n in range(4):
+                    Lv = advanceCount(stat[n*2:n*2+2], default[n*2:n*2+2], baseHitbox+i*8+j*4+n, Lv.copy(),1)
+        else:
+            if exclude:
+                stat=float2Hex(defaultSize[i][12])
+            else:
+                stat=float2Hex(changedSize[i][12])
+            for n in range(4):
+                Lv = advanceCount(stat[n*2:n*2+2], stat[n*2:n*2+2], baseHitbox+i*8+n, Lv.copy(),1)
+    Lv = resetCount(6470956,Lv.copy())
+    
+    for i in range(12): #team stars
+        for j in range(41):
+            stat=int2Hex(changedStarsTeam[i][j])
+            default=int2Hex(defaultStarsTeam[i][j])
+            for n in range(2):
+                Lv = advanceCount(stat[n*2:n*2+2], default[n*2:n*2+2], baseTeamStars+i*82+j*2+n, Lv.copy(),1)
+                
+    for i in range(4):#star handicap
+        for j in range(2):
+            stat=float2Hex(changedStarHandicap[i][j])
+            default=float2Hex(defaultStarHandicap[i][j])
+            for n in range(4):
+                Lv = advanceCount(stat[n*2:n*2+2], default[n*2:n*2+2], baseHandicap+i*8+j*4+n, Lv.copy(),1)
+    Lv = resetCount(6472004,Lv.copy())
+    
+    for i in range(101): #size scale
+        if i in listPlayers:
+            for j in range(2):
+                stat=float2Hex(changedSize[i][j])
+                default=float2Hex(defaultSize[i][j])
+                for n in range(4):
+                    Lv = advanceCount(stat[n*2:n*2+2], default[n*2:n*2+2], baseSizeScale+i*8+j*4+n, Lv.copy(),1)
+        else:
+            if exclude:
+                stat=float2Hex(defaultSize[i][0])
+            else:
+                stat=float2Hex(changedSize[i][0])
+            for n in range(4):
+                Lv = advanceCount(stat[n*2:n*2+2], stat[n*2:n*2+2], baseSizeScale+i*8+n, Lv.copy(),1)
+    Lv = resetCount(6483572,Lv.copy())
+    
+    for i in range(16):#star boost
+        for j in range(2):
+            stat=float2Hex(changedStarBoost[i][j])
+            default=float2Hex(changedStarBoost[i][j])
+            for n in range(4):
+                Lv = advanceCount(stat[n*2:n*2+2], default[n*2:n*2+2], baseStarBoost+i*12+j*4+n, Lv.copy(),1)
+        for j in range(2,4):
+            stat=int2Hex(changedStarBoost[i][j])
+            default=int2Hex(changedStarBoost[i][j])
+            for n in range(2):
+                Lv = advanceCount(stat[n*2:n*2+2], default[n*2:n*2+2], baseStarBoost+i*12+(j+2)*2+n, Lv.copy(),1)
+    Lv = resetCount(6494612,Lv.copy())
+    
+    for i in listPlayers: #stats and chem
+        if i==lastplayer+1:
+            Lv = advanceCount(0, 0, baseAddress+142*i, Lv.copy(),0)
+            Lv = advanceCount(0, 0, baseAddress+142*i+1, Lv.copy(),0)
+            Lv = advanceCount(i, i, baseAddress+142*i+2, Lv.copy(),0)
+        else:
+            if i!=lastplayer:
+                Lv=simpleAdvance(0, 0, Lv.copy(),0)
+                if lastplayer%2==0:
+                    Lv=simpleAdvance(0, 0, Lv.copy(),0)
+                    Lv=simpleAdvance(lastplayer+1, lastplayer+1, Lv.copy(),0)
+                Lv = resetCount(baseAddress+142*lastplayer+141-(lastplayer%2)*2,Lv.copy())
+            if i%2==0:
+                Lv=simpleAdvance(0, 0, Lv.copy(),0)
+                Lv=simpleAdvance(i, i, Lv.copy(),0)
+        for j in range(26): #stats
+            if j in [10,11,12,13,14,15,16,17,22,23,24,25]:
+                stat=changedStat[i][j]
+                default=defaultStat[i][j]
+                stat0=stat//256
+                default0=default//256
+                stat1=stat%256
+                default1=default%256
+                Lv = advanceCount(stat0, default0, baseAddress+142*i+getStatOffset(j), Lv.copy(),0)
+                Lv = advanceCount(stat1, default1, baseAddress+142*i+getStatOffset(j)+1, Lv.copy(),0)
+            else:
+                stat=changedStat[i][j]
+                default=defaultStat[i][j]
+                Lv = advanceCount(stat, default, baseAddress+142*i+getStatOffset(j), Lv.copy(),0)
+        for j in range(101): #chem
+            stat=changedChem[i][j]
+            default=defaultChem[i][j]
+            Lv = advanceCount(stat, default, baseAddress+142*i+j+41, Lv.copy(),0)
+        lastplayer=i
+    Lv=simpleAdvance(0, 0, Lv.copy(),0)
+    if lastplayer%2==0:
+        Lv=simpleAdvance(0, 0, Lv.copy(),0)
+        Lv=simpleAdvance(lastplayer+1, lastplayer+1, Lv.copy(),0)
+    Lv = resetCount(baseAddress+142*lastplayer+141-(lastplayer%2)*2,Lv.copy())
+    
+    
+    
+    
     
     return Lv[7].rstrip("\n")
 
@@ -2462,17 +2941,15 @@ def geckoCopy():
     root.clipboard_append(geckoDisplay.get("1.0", tk.END).strip())
     root.update()
 
-def loadChanges():
-    recapList.configure(state="normal")
+def loadChangesV3():
+    message=""
     name=geckoFile.get()
     if not name.isalnum():
         if name=="":
-            recapList.insert(tk.END,"No file name\n")
-            recapList.configure(state="disabled")
-            return
-        recapList.insert(tk.END,"File name can't contain spaces or special characters\n")
-        recapList.configure(state="disabled")
-        return
+            message=message+"No file name\n"
+            return(message)
+        message=message+"File name can't contain spaces or special characters\n"
+        return(message)
     path=abspath(getsourcefile(lambda:0)).rsplit("\\",2)[0]
     try:
         with open(path+"\\Save Files\\"+name+".txt","r") as file:
@@ -2492,23 +2969,22 @@ def loadChanges():
             used=file.readline().rstrip("\n")
             error=0
             if not re.search("^(([012],){100}[012];){100}([012],){100}[012]$",chem):
-                recapList.insert(tk.END,"corrupted chem data\n")
+                message=message+"corrupted chem data\n"
                 error=1
             if not re.search("^(([0-9]+,){29}[0-9]+;){100}([0-9]+,){29}[0-9]+$",stat):
-                recapList.insert(tk.END,"corrupted stat data\n")
+                message=message+"corrupted stat data\n"
                 error=1
             if not re.search("^(([0-9]+,){24}[0-9]+;){23}([0-9]+,){24}[0-9]+$",traj):
-                recapList.insert(tk.END,"corrupted traj data\n")
+                message=message+"corrupted traj data\n"
                 error=1
             if not re.search("^([a-zA-Z0-9\s]+,){5}[a-zA-Z0-9\s]+$",name):
-                recapList.insert(tk.END,"corrupted traj data\n")
+                message=message+"corrupted traj data\n"
                 error=1
             if not re.search("^([01],){5}[01]$",used):
-                recapList.insert(tk.END,"corrupted traj data\n")
+                message=message+"corrupted traj data\n"
                 error=1
             if error==1:
-                recapList.configure(state="disabled")
-                return
+                return(message)
             chems=chem.split(";")
             stats=stat.split(";")
             trajs=traj.split(";")
@@ -2531,12 +3007,183 @@ def loadChanges():
             changedTrajListUsed()
             trajDisplay(1)
             chemColor()
+            recapList.configure(state="normal")
             recapList.insert(tk.END,"Data loaded\n")
             recapList.configure(state="disabled")
+            return(message)
     except FileNotFoundError:
-        recapList.insert(tk.END,"File not found\n")
-        recapList.configure(state="disabled")
-        return
+        message=message+"File not found\n"
+        return(message)
+
+def loadChangesV4():
+    message=""
+    name=geckoFile.get()
+    if not name.isalnum():
+        if name=="":
+            message=message+"No file name\n"
+            return(message)
+        message=message+"File name can't contain spaces or special characters\n"
+        return(message)
+    path=abspath(getsourcefile(lambda:0)).rsplit("\\",2)[0]
+    try:
+        with open(path+"\\Save Files\\"+name+".txt","r") as file:
+            chem=""
+            stat=""
+            traj=""
+            size=""
+            pitch=""
+            speed=""
+            starsTeam=""
+            starBoost=""
+            starHandicap=""
+            handicapParams=""
+            for i in range(100):
+                chem=chem+file.readline().rstrip("\n")+";"
+            chem=chem+file.readline()
+            for i in range(100):
+                stat=stat+file.readline().rstrip("\n")+";"
+            stat=stat+file.readline()
+            for i in range(23):
+                traj=traj+file.readline().rstrip("\n")+";"
+            traj=traj+file.readline().rstrip("\n")
+            name=file.readline().rstrip("\n")
+            used=file.readline().rstrip("\n")
+            for i in range(100):
+                size=size+file.readline().rstrip("\n")+";"
+            size=size+file.readline()
+            for i in range(100):
+                pitch=pitch+file.readline().rstrip("\n")+";"
+            pitch=pitch+file.readline()
+            for i in range(42):
+                speed=speed+file.readline().rstrip("\n")+";"
+            speed=speed+file.readline()
+            for i in range(11):
+                starsTeam=starsTeam+file.readline().rstrip("\n")+";"
+            starsTeam=starsTeam+file.readline()
+            for i in range(15):
+                starBoost=starBoost+file.readline().rstrip("\n")+";"
+            starBoost=starBoost+file.readline()
+            for i in range(3):
+                starHandicap=starHandicap+file.readline().rstrip("\n")+";"
+            starHandicap=starHandicap+file.readline()
+            handicapParams=handicapParams+file.readline().rstrip("\n")+";"
+            handicapParams=handicapParams+file.readline()
+            error=0
+            if not re.search("^(([012],){100}[012];){100}([012],){100}[012]$",chem):
+                message=message+"corrupted chem data\n"
+                error=1
+            if not re.search("^(([0-9]+,){29}[0-9]+;){100}([0-9]+,){29}[0-9]+$",stat):
+                message=message+"corrupted stat data\n"
+                error=1
+            if not re.search("^(([0-9]+,){24}[0-9]+;){23}([0-9]+,){24}[0-9]+$",traj):
+                message=message+"corrupted traj data\n"
+                error=1
+            if not re.search("^([a-zA-Z0-9\s]+,){5}[a-zA-Z0-9\s]+$",name):
+                message=message+"corrupted traj data\n"
+                error=1
+            if not re.search("^([01],){5}[01]$",used):
+                message=message+"corrupted traj data\n"
+                error=1
+            if not re.search("^(([0-9.]+,){13}[0-9.]+;){100}([0-9.]+,){13}[0-9.]+$",size):
+                message=message+"corrupted size data\n"
+                error=1
+            if not re.search("^(([0-9.]+,){4}[0-9.]+;){100}([0-9.]+,){4}[0-9.]+$",pitch):
+                message=message+"corrupted pitching data\n"
+                error=1
+            if not re.search("^(([0-9.]+,){1}[0-9.]+;){42}([0-9.]+,){1}[0-9.]+$",speed):
+                message=message+"corrupted speed data\n"
+                error=1
+            if not re.search("^(([0-9.]+,){40}[0-9.]+;){11}([0-9.]+,){40}[0-9.]+$",starsTeam):
+                message=message+"corrupted team stars data\n"
+                error=1
+            if not re.search("^(([0-9.]+,){3}[0-9.]+;){15}([0-9.]+,){3}[0-9.]+$",starBoost):
+                message=message+"corrupted team stars boost\n"
+                error=1
+            if not re.search("^(([0-9.]+,){1}[0-9.]+;){3}([0-9.]+,){1}[0-9.]+$",starHandicap):
+                message=message+"corrupted team star handicap\n"
+                error=1
+            if not re.search("^(([0-9.]+,){2}[0-9.]+;){1}([0-9.]+,){2}[0-9.]+$",handicapParams):
+                message=message+"corrupted team handicap params\n"
+                error=1
+            if error==1:
+                return(message)
+            chems=chem.split(";")
+            stats=stat.split(";")
+            trajs=traj.split(";")
+            names=name.split(",")
+            useds=used.split(",")
+            sizes=size.split(";")
+            pitchs=pitch.split(";")
+            speeds=speed.split(";")
+            starsTeams=starsTeam.split(";")
+            starBoosts=starBoost.split(";")
+            starHandicaps=starHandicap.split(";")
+            handicapParamss=handicapParams.split(";")
+            for i in range(101):
+                c=chems[i].split(",")
+                s=stats[i].split(",")
+                z=sizes[i].split(",")
+                p=pitchs[i].split(",")
+                for j in range(101):
+                    changedChem[i][j]=int(c[j])
+                for j in range(30):
+                    changedStat[i][j]=int(s[j])
+                for j in range(14):
+                    changedSize[i][j]=int(z[j])
+                for j in range(5):
+                    changedPitching[i][j]=int(p[j])
+                if i<24:
+                    t=trajs[i].split(",")
+                    for j in range(25):
+                        changedTraj[i][j]=int(t[j])
+                if i<6:
+                    trajAllList[i]=names[i]
+                    trajUsed[i]=int(useds[i])
+                if i<43:
+                    sp=speeds[i].split(",")
+                    for j in range(2):
+                        changedSpeed[i][j]=int(sp[j])
+                if i<12:
+                    st=starsTeams[i].split(",")
+                    for j in range(41):
+                        changedSpeed[i][j]=int(st[j])
+                if i<16:
+                    sb=starBoosts[i].split(",")
+                    for j in range(4):
+                        changedSpeed[i][j]=int(sb[j])
+                if i<4:
+                    sh=starHandicaps[i].split(",")
+                    for j in range(2):
+                        changedSpeed[i][j]=int(sh[j])
+                if i<2:
+                    h=handicapParamss[i].split(",")
+                    for j in range(3):
+                        changedSpeed[i][j]=int(h[j])
+            changedTrajListUsed()
+            trajDisplay(1)
+            starBoostDisplay()
+            estarHandicapDisplay()
+            estarDisplay(1)
+            speedDisplay()
+            hitboxDisplay(1)
+            chemColor()
+            recapList.configure(state="normal")
+            recapList.insert(tk.END,"Data loaded\n")
+            recapList.configure(state="disabled")
+            return(message)
+    except FileNotFoundError:
+        message=message+"File not found\n"
+        return(message)
+
+def loadChanges():
+    message=loadChangesV4()
+    if message!="":
+        message2=loadChangesV3()
+        if message2!="":
+            recapList.configure(state="normal")
+            recapList.insert(tk.END,message)
+            recapList.configure(state="disabled")
+    return
 
 def saveChanges():
     recapList.configure(state="normal")
@@ -2573,7 +3220,33 @@ def saveChanges():
             file.write(trajAllList[5]+"\n")
             for i in range(5):
                 file.write(str(trajUsed[i])+",")
-            file.write(str(trajUsed[5]))
+            file.write(str(trajUsed[5])+"\n")
+            for i in range(101):
+                for j in range(13):
+                    file.write(str(changedSize[i][j])+",")
+                file.write(str(changedSize[i][13])+"\n")
+            for i in range(101):
+                for j in range(4):
+                    file.write(str(changedPitching[i][j])+",")
+                file.write(str(changedPitching[i][4])+"\n")
+            for i in range(43):
+                file.write(str(changedSpeed[i][0])+",")
+                file.write(str(changedSpeed[i][1])+"\n")
+            for i in range(12):
+                for j in range(40):
+                    file.write(str(changedStarsTeam[i][j])+",")
+                file.write(str(changedStarsTeam[i][40])+"\n")
+            for i in range(16):
+                for j in range(3):
+                    file.write(str(changedStarBoost[i][j])+",")
+                file.write(str(changedStarBoost[i][3])+"\n")
+            for i in range(4):
+                file.write(str(changedStarHandicap[i][0])+",")
+                file.write(str(changedStarHandicap[i][1])+"\n")
+            for i in range(2):
+                for j in range(2):
+                    file.write(str(changedHandicapParams[i][j])+",")
+                file.write(str(changedHandicapParams[i][2])+"\n")
             recapList.insert(tk.END,"Data saved\n")
             recapList.configure(state="disabled")
     except FileExistsError:
@@ -2640,15 +3313,153 @@ def getStatPosition(pos):
     else:
         return (pos+11)//2
 
+
 def simpleCodeLoad(address,code):
+    speedfieldstart=6445208
+    speedfieldend=6445379
+    speedbasestart=6447624
+    speedbaseend=6447795
+    trajweightstart=6450824
+    trajweightend=6451423
+    pitchwindupstart=6456320
+    pitchwindupend=6457531
+    starpitchstart=6457532
+    starpitchend=6457632
+    staminastart=6457636
+    staminaend=6457837
+    changeupstart=6459056
+    changeupend=6459863
+    trajstart=6463836
+    trajend=6464037
+    catchrangestart=6465160
+    catchrangeend=6469199
+    hitboxstart=6470152
+    hitboxend=6470959
+    starteamstart=6470992
+    starteamend=6471975
+    starhandicapstart=6471976
+    starhandicapend=6472007
+    sizescalestart=6482768
+    sizescaleend=6483575
+    starbooststart=6494424
+    starboostend=6494615
     statstart=7137703
     statend=7152044
-    trajstart=6463836
-    staminastart=6457636
-    starpitchstart=6457532
-    trajweightstart=6450824
     
-    if address>=statstart and address<=statend:
+    if address>=speedfieldstart and address<=speedfieldend:
+        q=(address-speedfieldstart)//4
+        r=(address-speedfieldstart)%4
+        s=float2Hex(changedSpeed[q][1])
+        s=s[0:2*r]+hex(code).lstrip("0x").zfill(2)+s[2*r+2:]
+        changedSpeed[q][1]=hex2Float(s)
+        
+    elif address>=speedbasestart and address<=speedbaseend:
+        q=(address-speedbasestart)//4
+        r=(address-speedbasestart)%4
+        s=float2Hex(changedSpeed[q][0])
+        s=s[0:2*r]+hex(code).lstrip("0x").zfill(2)+s[2*r+2:]
+        changedSpeed[q][0]=hex2Float(s)
+    
+    elif address>=trajweightstart and address<=trajweightend:
+        q=(address-trajweightstart)//25
+        r=(address-trajweightstart)%25
+        changedTraj[q][r]=code
+        
+    elif address>=pitchwindupstart and address<=pitchwindupend:
+        q=(address-pitchwindupstart)//12
+        r=(address-pitchwindupstart)%12
+        qr=r//4
+        rr=r%4
+        s=float2Hex(changedPitching[q][qr])
+        s=s[0:2*rr]+hex(code).lstrip("0x").zfill(2)+s[2*rr+2:]
+        changedPitching[q][qr]=hex2Float(s)
+    
+    elif address>=starpitchstart and address<=starpitchend:
+        q=address-starpitchstart
+        changedStat[q][29]=code
+        
+    elif address>=staminastart and address<=staminaend:
+        q=(address-staminastart)//2
+        r=(address-staminastart)%2
+        if r==0:
+            changedStat[q][28]=changedStat[q][28]%256 + 256*code
+        else:
+            changedStat[q][28]=(changedStat[q][28]//256)*256 + code
+    
+    elif address>=changeupstart and address<=changeupend:
+        q=(address-changeupstart)//8
+        r=(address-changeupstart)%8
+        qr=r//4
+        rr=r%4
+        s=float2Hex(changedPitching[q][qr+3])
+        s=s[0:2*rr]+hex(code).lstrip("0x").zfill(2)+s[2*rr+2:]
+        changedPitching[q][qr+3]=hex2Float(s)
+        
+    elif address>=trajstart and address<=trajend:
+        q=(address-trajstart)//2
+        r=(address-trajstart)%2
+        changedStat[q][26+r]=code
+        
+    elif address>=catchrangestart and address<=catchrangeend:
+        q=(address-catchrangestart)//40
+        r=(address-catchrangestart)%40
+        qr=r//4
+        rr=r%4
+        s=float2Hex(changedSize[q][qr+2])
+        s=s[0:2*rr]+hex(code).lstrip("0x").zfill(2)+s[2*rr+2:]
+        changedSize[q][qr+2]=hex2Float(s)
+        
+    elif address>=hitboxstart and address<=hitboxend:
+        q=(address-hitboxstart)//8
+        r=(address-hitboxstart)%8
+        qr=r//4
+        rr=r%4
+        s=float2Hex(changedSize[q][qr+12])
+        s=s[0:2*rr]+hex(code).lstrip("0x").zfill(2)+s[2*rr+2:]
+        changedSize[q][qr+12]=hex2Float(s)
+        
+    elif address>=starteamstart and address<=starteamend:
+        q=(address-starteamstart)//82
+        r=(address-starteamstart)%82
+        qr=r//2
+        rr=r%2
+        s=int2Hex(changedStarsTeam[q][qr])
+        s=s[0:2*rr]+hex(code).lstrip("0x").zfill(2)+s[2*rr+2:]
+        changedStarsTeam[q][qr]=hex2Int(s)
+    
+    elif address>=starhandicapstart and address<=starhandicapend:
+        q=(address-starhandicapstart)//8
+        r=(address-starhandicapstart)%8
+        qr=r//4
+        rr=r%4
+        s=float2Hex(changedStarHandicap[q][qr])
+        s=s[0:2*rr]+hex(code).lstrip("0x").zfill(2)+s[2*rr+2:]
+        changedStarHandicap[q][qr]=hex2Float(s)
+        
+    elif address>=sizescalestart and address<=sizescaleend:
+        q=(address-sizescalestart)//8
+        r=(address-sizescalestart)%8
+        qr=r//4
+        rr=r%4
+        s=float2Hex(changedSize[q][qr])
+        s=s[0:2*rr]+hex(code).lstrip("0x").zfill(2)+s[2*rr+2:]
+        changedSize[q][qr]=hex2Float(s)
+        
+    elif address>=starbooststart and address<=starboostend:
+        q=(address-sizescalestart)//12
+        r=(address-sizescalestart)%12
+        if r==3:
+            changedStarBoost[q][0]==code
+        elif r in range(4,8):
+            s=float2Hex(changedStarBoost[q][1])
+            s=s[0:2*(r-4)]+hex(code).lstrip("0x").zfill(2)+s[2*(r-4)+2:]
+            changedStarBoost[q][1]=hex2Float(s)
+        elif r>7:
+            s=int2Hex(changedStarsTeam[q][r//2-2])
+            s=s[0:2*(r%2)]+hex(code).lstrip("0x").zfill(2)+s[2*(r%2)+2:]
+            changedStarsTeam[q][r//2-2]=hex2Int(s)
+    
+    elif address>=statstart and address<=statend:
         q=(address-statstart)//142
         r=(address-statstart)%142
         if r>2:
@@ -2660,24 +3471,7 @@ def simpleCodeLoad(address,code):
                     changedStat[q][p]=(changedStat[q][p]//256)*256 + code
             else:
                 changedChem[q][r-41]=code
-    elif address>=trajstart and address<=trajstart+201:
-        q=(address-trajstart)//2
-        r=(address-trajstart)%2
-        changedStat[q][26+r]=code
-    elif address>=staminastart and address<=staminastart+201:
-        q=(address-staminastart)//2
-        r=(address-staminastart)%2
-        if r==0:
-            changedStat[q][28]=changedStat[q][28]%256 + 256*code
-        else:
-            changedStat[q][28]=(changedStat[q][28]//256)*256 + code
-    elif address>=starpitchstart and address<=starpitchstart+100:
-        q=address-starpitchstart
-        changedStat[q][29]=code
-    elif address>=trajweightstart and address<=trajweightstart+599:
-        q=(address-trajweightstart)//25
-        r=(address-trajweightstart)%25
-        changedTraj[q][r]=code
+
 
 def loadCode():
     recapList.configure(state="normal")
@@ -2778,6 +3572,11 @@ def loadCode():
                 return
     changedTrajListUsed()
     trajDisplay(1)
+    starBoostDisplay()
+    estarHandicapDisplay()
+    estarDisplay(1)
+    speedDisplay()
+    hitboxDisplay(1)
     chemColor()
     recapList.insert(tk.END,"Gecko code loaded\n")
     recapList.configure(state="disabled")
@@ -2843,6 +3642,580 @@ def devMode():
         recapList.insert(tk.END, "Dev mode de-activated, edited stats may remain out of safe range\n")
         recapList.configure(state="disabled")
 
+#Hitbox functions
+
+def hitboxCheckButton(name):
+    var="sbHitbox"+name
+    if eval("checkHitbox"+name).getvar(eval("checkHitbox"+name).cget("variable"))=="0":
+        eval(var).configure(state="disabled")
+    else:
+        eval(var).configure(state="normal")
+ 
+def computeHitboxValue():
+    recapList.configure(state="normal")
+    if(cbHitboxPlayer.get()=="Pick a character/group"):
+        for i in range(2,14):
+            recap="hitboxRecap"+str(i)
+            eval(recap).configure(state="normal")
+            eval(recap).delete("0.0",tk.END)
+            eval(recap).configure(state="disable")    
+        return
+    err=0
+    size=sbHitbox0.get()
+    if size.find("-")==-1:
+        size=float(size)
+    else:
+        err=1
+    for i in range(2,14):
+        e=0
+        s=eval("sbHitbox"+str(i)).get()
+        if s.find("-")!=-1:
+            e=1
+        e=e+err
+        if e==0:
+            r=str(round(float(size)*float(s)*0.01,4))
+        else:
+            r="multiple"
+        recap="hitboxRecap"+str(i)
+        eval(recap).configure(state="normal")
+        eval(recap).delete("0.0",tk.END)
+        eval(recap).insert(tk.END,r)
+        eval(recap).configure(state="disable")    
+ 
+def hitboxDisplay(clear):
+    if(cbHitboxPlayer.get()=="Pick a character/group"):
+        return
+    if clear:
+        cbHitboxPlayer.set("Pick a character/group")
+    else:
+        index=comboList.index(cbHitboxPlayer.get())
+        size=getGroupSize(index)
+        if size!=1:
+            index = index+1
+    for i in range(14):
+        if clear:
+            stat=""
+        else:
+            statmin=-1
+            statmax=-1
+            for j in range(index,index+size):
+                player=charList.index(comboList[j].lstrip())
+                if statmin==-1:
+                    statmin=changedSize[player][i]
+                    statmax=statmin
+                else:
+                    value=changedSize[player][i]
+                    if statmin>value:
+                        statmin=value
+                    elif statmax<value:
+                        statmax=value
+            if statmin==statmax:
+                stat=statmin
+            else:
+                stat=str(statmin)+" - "+str(statmax)
+        eval("sbHitbox"+str(i)).set(stat)
+    computeHitboxValue()
+        
+def hitboxPlayerChange(event):
+    hitboxDisplay(0)
+
+def changeHitbox():
+    recapList.configure(state="normal")
+    group=cbHitboxPlayer.get()
+    if group=="Pick a character/group":
+        recapList.insert(tk.END, "Pick a character/group\n")
+        recapList.configure(state="disabled")
+        return
+    index=comboList.index(group)
+    size=getGroupSize(index)
+    if size!=1:
+        index = index+1
+    message=""
+    for i in range(14):
+        if eval("checkHitbox"+str(i)).getvar(eval("checkHitbox"+str(i)).cget("variable"))=="1":
+            var="sbHitbox"+str(i)
+            stat=eval(var).get()
+            if stat.replace('.','',1).replace('-','',1).isdecimal()==False:
+                recapList.insert(tk.END, "Unexpected non-numerical value(s)\n")
+                recapList.configure(state="disabled")
+                return
+            message=message+" "+sizeList[i]+","
+            for j in range(index,index+size):
+                player=charList.index(comboList[j].lstrip())
+                changedSize[player][i]=stat
+    if message!="":
+        message=message.rstrip(",")
+        if message.find(",")!=-1:
+            message1=message.rsplit(", ",1)
+            message=message1[0]+" and "+message1[1]
+        group=group.lstrip()+"'"
+        if group[-2]!="s":
+            group=group+"s"
+        recapList.insert(tk.END,group+message+" changed\n")
+        recapList.configure(state="disabled")
+
+def changeHitboxE():
+    recapList.configure(state="normal")
+    message=""
+    for i in range(14):
+        if eval("checkHitbox"+str(i)).getvar(eval("checkHitbox"+str(i)).cget("variable"))=="1":
+            var="sbHitbox"+str(i)
+            stat=eval(var).get()
+            if stat.replace('.','',1).replace('-','',1).isdecimal()==False:
+                recapList.insert(tk.END, "Unexpected non-numerical value(s)\n")
+                recapList.configure(state="disabled")
+                return
+            message=message+" "+statsList[i]+","
+            for j in range(101):
+                changedSize[j][i]=stat
+    if message!="":
+        message=message.rstrip(",")
+        if message.find(",")!=-1:
+            message1=message.rsplit(", ",1)
+            message=message1[0]+" and "+message1[1]
+        recapList.insert(tk.END,"Everyone"+message+" changed\n")
+        recapList.configure(state="disabled")
+
+def resetHitbox():
+    recapList.configure(state="normal")
+    group=cbHitboxPlayer.get()
+    if group=="Pick a character/group":
+        recapList.insert(tk.END, "Pick a character/group\n")
+        recapList.configure(state="disabled")
+        return
+    index=comboList.index(group)
+    size=getGroupSize(index)
+    if size!=1:
+        index = index+1
+    message=""
+    for i in range(14):
+        if eval("checkHitbox"+str(i)).getvar(eval("checkHitbox"+str(i)).cget("variable"))=="1":
+            message=message+" "+sizeList[i]+","
+            for j in range(index,index+size):
+                player=charList.index(comboList[j].lstrip())
+                changedSize[player][i]=defaultSize[player][i]
+    if message!="":
+        message=message.rstrip(",")
+        if message.find(",")!=-1:
+            message1=message.rsplit(", ",1)
+            message=message1[0]+" and "+message1[1]
+        group=group.lstrip()+"'"
+        if group[-2]!="s":
+            group=group+"s"
+        recapList.insert(tk.END,group+message+" reset\n")
+        recapList.configure(state="disabled")
+    hitboxDisplay(0)
+
+def resetHitboxA():
+    recapList.configure(state="normal")
+    group=cbHitboxPlayer.get()
+    if group=="Pick a character/group":
+        recapList.insert(tk.END, "Pick a character/group\n")
+        recapList.configure(state="disabled")
+        return
+    index=comboList.index(group)
+    size=getGroupSize(index)
+    if size!=1:
+        index = index+1
+    for j in range(index,index+size):
+        player=charList.index(comboList[j].lstrip())
+        changedSize[player]=defaultSize[player].copy()
+    group=group.lstrip()+"'"
+    if group[-2]!="s":
+        group=group+"s"
+    recapList.insert(tk.END,group+" all stats reset\n")
+    recapList.configure(state="disabled")
+    hitboxDisplay(0)
+
+def resetHitboxE():
+    recapList.configure(state="normal")
+    message=""
+    for i in range(14):
+        if eval("checkHitbox"+str(i)).getvar(eval("checkHitbox"+str(i)).cget("variable"))=="1":
+            message=message+" "+sizeList[i]+","
+            for j in range(101):
+                changedSize[j][i]=defaultSize[j][i]
+    if message!="":
+        message=message.rstrip(",")
+        if message.find(",")!=-1:
+            message1=message.rsplit(", ",1)
+            message=message1[0]+" and "+message1[1]
+        recapList.insert(tk.END,"Everyone"+message+" reset\n")
+        recapList.configure(state="disabled")
+    if cbHitboxPlayer.get()=="Pick a character/group":
+        hitboxDisplay(1)
+    else:
+        hitboxDisplay(0)
+
+def resetHitboxAE():
+    global changedSize
+    recapList.configure(state="normal")
+    changedSize=[]
+    for L in defaultSize:
+        changedSize.append(L.copy())
+    recapList.insert(tk.END,"Everyone all hitbox reset\n")
+    recapList.configure(state="disabled")
+    if cbHitboxPlayer.get()=="Pick a character/group":
+        hitboxDisplay(1)
+    else:
+        hitboxDisplay(0)
+
+#Speed functions
+
+def speedCheckButton(name):
+    var="speed"+name+"sb"
+    if eval("speed"+name+"Check").getvar(eval("speed"+name+"Check").cget("variable"))=="0":
+        eval(var+"Base").configure(state="disabled")
+        eval(var+"Field").configure(state="disabled")
+    else:
+        eval(var+"Base").configure(state="normal")
+        eval(var+"Field").configure(state="normal")
+
+def speedDisplay():
+    for i in range(43):
+        n="speed"+str(i)+"0sb"
+        eval(n+"Base").set(changedSpeed[i][0])
+        eval(n+"Field").set(changedSpeed[i][1])
+
+def changeSpeed():
+    message=0
+    for i in range(43):
+        var="speed"+str(i)+"0sb"
+        if eval("speed"+str(i)+"0Check").getvar(eval("speed"+str(i)+"0Check").cget("variable"))=="1":
+            message=1
+            changedSpeed[i][0] = eval(var+"Base").get()
+            changedSpeed[i][1] = eval(var+"Field").get()
+    recapList.configure(state="normal")
+    if message:
+        recapList.insert(tk.END,"Changed speed values\n")
+    else:
+        recapList.insert(tk.END,"No speed value selected\n")
+    recapList.configure(state="disabled")
+
+def resetSpeed():
+    message=0
+    for i in range(43):
+        if eval("speed"+str(i)+"0Check").getvar(eval("speed"+str(i)+"0Check").cget("variable"))=="1":
+            message=1
+            changedSpeed[i][0] = defaultSpeed[i][0]
+            changedSpeed[i][1] = defaultSpeed[i][1]
+    speedDisplay()
+    recapList.configure(state="normal")
+    if message:
+        recapList.insert(tk.END,"Reset selected speed values\n")
+    else:
+        recapList.insert(tk.END,"No speed value selected\n")
+    recapList.configure(state="disabled")
+
+def resetSpeedA():
+    for i in range(43):
+        changedSpeed[i][0] = defaultSpeed[i][0]
+        changedSpeed[i][1] = defaultSpeed[i][1]
+    speedDisplay()
+    recapList.configure(state="normal")
+    recapList.insert(tk.END,"Reset all speed values\n")
+    recapList.configure(state="disabled")
+
+#Star Earned functions
+
+def estarCheckButton(name):
+    var="estarsb"+name
+    if eval("estarCheck"+name).getvar(eval("estarCheck"+name).cget("variable"))=="0":
+        eval(var).configure(state="disabled")
+    else:
+        eval(var).configure(state="normal")
+    
+    
+def estarDisplay(clear):
+    if(estarcbTeam.get()=="Pick a team"):
+        return
+    if clear:
+        estarcbTeam.set("Pick a team")
+    else:
+        team=teamList.index(estarcbTeam.get())
+    for i in range(41):
+        if clear:
+            stat=""
+        else:
+            stat=changedStarsTeam[team][i]
+        eval("estarsb"+str(i)).set(stat)
+        
+def estarTeamChange(event):
+    estarDisplay(0)
+
+def changeStarGain():
+    recapList.configure(state="normal")
+    team=estarcbTeam.get()
+    if team=="Pick a team":
+        recapList.insert(tk.END, "Pick a team\n")
+        recapList.configure(state="disabled")
+        return
+    iteam=teamList.index(estarcbTeam.get())
+    message=""
+    for i in range(41):
+        if eval("estarCheck"+str(i)).getvar(eval("estarCheck"+str(i)).cget("variable"))=="1":
+            var="estarsb"+str(i)
+            stat=eval(var).get()
+            if stat.replace('-','',1).isdecimal()==False:
+                recapList.insert(tk.END, "Unexpected non-numerical value(s)\n")
+                recapList.configure(state="disabled")
+                return
+            message=message+" "+starEventsList[i]+","
+            changedStarsTeam[iteam][i]=stat
+    if message!="":
+        message=message.rstrip(",")
+        if message.find(",")!=-1:
+            message1=message.rsplit(", ",1)
+            message=message1[0]+" and "+message1[1]
+        recapList.insert(tk.END,team+"'s"+message+" star gains changed\n")
+        recapList.configure(state="disabled")
+
+def changeStarGainE():
+    recapList.configure(state="normal")
+    message=""
+    for i in range(41):
+        if eval("estarCheck"+str(i)).getvar(eval("estarCheck"+str(i)).cget("variable"))=="1":
+            var="estarsb"+str(i)
+            stat=eval(var).get()
+            if stat.replace('-','',1).isdecimal()==False:
+                recapList.insert(tk.END, "Unexpected non-numerical value(s)\n")
+                recapList.configure(state="disabled")
+                return
+            message=message+" "+starEventsList[i]+","
+            for j in range(12):
+                changedStarsTeam[j][i]=stat
+    if message!="":
+        message=message.rstrip(",")
+        if message.find(",")!=-1:
+            message1=message.rsplit(", ",1)
+            message=message1[0]+" and "+message1[1]
+        recapList.insert(tk.END,"Every team"+message+" star gains changed\n")
+        recapList.configure(state="disabled")
+
+def resetStarGain():
+    recapList.configure(state="normal")
+    team=estarcbTeam.get()
+    if team=="Pick a team":
+        recapList.insert(tk.END, "Pick a team\n")
+        recapList.configure(state="disabled")
+        return
+    iteam=teamList.index(estarcbTeam.get())
+    message=""
+    for i in range(41):
+        if eval("estarCheck"+str(i)).getvar(eval("estarCheck"+str(i)).cget("variable"))=="1":
+            message=message+" "+starEventsList[i]+","
+            changedStarsTeam[iteam][i]=defaultStarsTeam[iteam][i]
+    if message!="":
+        message=message.rstrip(",")
+        if message.find(",")!=-1:
+            message1=message.rsplit(", ",1)
+            message=message1[0]+" and "+message1[1]
+        recapList.insert(tk.END,team+"'s"+message+" star gains reset\n")
+        recapList.configure(state="disabled")
+
+def resetStarGainA():
+    recapList.configure(state="normal")
+    team=estarcbTeam.get()
+    if team=="Pick a team":
+        recapList.insert(tk.END, "Pick a team\n")
+        recapList.configure(state="disabled")
+        return
+    iteam=teamList.index(estarcbTeam.get())
+    changedStarsTeam[iteam]=defaultStarsTeam[iteam].copy()
+    recapList.insert(tk.END,team+"'s all star gains reset\n")
+    recapList.configure(state="disabled")
+    hitboxDisplay(0)
+
+def resetStarGainE():
+    recapList.configure(state="normal")
+    message=""
+    for i in range(41):
+        if eval("estarCheck"+str(i)).getvar(eval("estarCheck"+str(i)).cget("variable"))=="1":
+            message=message+" "+starEventsList[i]+","
+            for j in range(12):
+                changedStarsTeam[j][i]=defaultStarsTeam[j][i]
+    if message!="":
+        message=message.rstrip(",")
+        if message.find(",")!=-1:
+            message1=message.rsplit(", ",1)
+            message=message1[0]+" and "+message1[1]
+        recapList.insert(tk.END,"Every team"+message+" star gains reset\n")
+        recapList.configure(state="disabled")
+    if cbHitboxPlayer.get()=="Pick a team":
+        estarDisplay(1)
+    else:
+        estarDisplay(0)
+
+def resetStarGainAE():
+    global changedStarsTeam
+    recapList.configure(state="normal")
+    changedStarsTeam=[]
+    for L in defaultStarsTeam:
+        changedStarsTeam.append(L.copy())
+    recapList.insert(tk.END,"Every team all star gains reset\n")
+    recapList.configure(state="disabled")
+    if cbHitboxPlayer.get()=="Pick a character/group":
+        hitboxDisplay(1)
+    else:
+        hitboxDisplay(0)
+
+def estarHandicapCheckButton(name):
+    if eval("estarHandicapCheck"+name).getvar(eval("estarHandicapCheck"+name).cget("variable"))=="0":
+        eval("estarHandicapLeadsb"+name).configure(state="disabled")
+        eval("estarHandicapMultsb"+name).configure(state="disabled")
+    else:
+        eval("estarHandicapLeadsb"+name).configure(state="normal")
+        eval("estarHandicapMultsb"+name).configure(state="normal")
+
+def estarHandicapDisplay():
+    for i in range(4):
+        eval("estarHandicapLeadsb"+str(i)).set(changedStarHandicap[i][0])
+        eval("estarHandicapMultsb"+str(i)).set(changedStarHandicap[i][1])
+    
+def fixHandicapParams():
+    p=0
+    for i in range(4):
+        if changedStarHandicap[i][0]>=0:
+            p=p+1
+    n=4-p
+    changedHandicapParams[0][0]=p
+    changedHandicapParams[0][1]=max((p-1),0)*8
+    changedHandicapParams[0][2]=max((p-1),0)
+    changedHandicapParams[0][0]=n
+    changedHandicapParams[0][1]=max((p+n-1),0)*8
+    changedHandicapParams[0][2]=max((p+n-1),0)
+
+def resetHandicapParams():
+    for i in range(2):
+        for j in range(3):
+            changedHandicapParams[i][j]=defaultHandicapParams[i][j]
+
+def changeHandicap():
+    recapList.configure(state="normal")
+    message=0
+    test=0
+    for i in range(4):
+        if eval("estarHandicapLeadsb"+str(i)).get()<0 and test==0:
+            test=1
+        if eval("estarHandicapLeadsb"+str(i)).get()>0 and test==1:
+            test=2
+    if test==2:
+        recapList.insert(tk.END,"Handicaps need to be ordered, positive then negative\n")
+        recapList.configure(state="disabled")
+        return
+    
+    for i in range(4):
+        if eval("estarHandicapCheck"+str(i)).getvar(eval("estarHandicapCheck"+str(i)).cget("variable"))=="1":
+            changedStarHandicap[i][0]= eval("estarHandicapLeadsb"+str(i)).get()
+            changedStarHandicap[i][1]= eval("estarHandicapMultsb"+str(i)).get()
+            message=1
+    fixHandicapParams()
+    if message:
+        recapList.insert(tk.END,"Changed selected star gain handicaps\n")
+    else:
+        recapList.insert(tk.END,"No star gain handicap selected\n")
+    recapList.configure(state="disabled")
+
+def resetHandicap():
+    message=0
+    for i in range(4):
+        if eval("estarHandicapCheck"+str(i)).getvar(eval("estarHandicapCheck"+str(i)).cget("variable"))=="1":
+            changedStarHandicap[i][0]= defaultStarHandicap[i][0]
+            changedStarHandicap[i][1]= defaultStarHandicap[i][1]
+            message=1
+    estarHandicapDisplay()
+    resetHandicapParams()
+    recapList.configure(state="normal")
+    if message:
+        recapList.insert(tk.END,"Reset selected star gain handicaps\n")
+    else:
+        recapList.insert(tk.END,"No star gain handicap selected\n")
+    recapList.configure(state="disabled")
+
+def resetHandicapA():
+    for i in range(4):
+        changedStarHandicap[i][0] = defaultStarHandicap[i][0]
+        changedStarHandicap[i][1] = defaultStarHandicap[i][1]
+    estarHandicapDisplay()
+    resetHandicapParams()
+    recapList.configure(state="normal")
+    recapList.insert(tk.END,"Reset all star gain handicaps\n")
+    recapList.configure(state="disabled")
+
+#Star Boosts functions
+
+def bstarCheckButton(name):
+    if eval("bstarCheck"+name).getvar(eval("bstarCheck"+name).cget("variable"))=="0":
+        eval("bstarOpcb"+name).configure(state="disabled")
+        for n in ["Value","Min","Max"]:
+            eval("bstar"+str(n)+"sb"+name).configure(state="disabled")
+    else:
+        eval("bstarOpcb"+name).configure(state="readonly")
+        for n in ["Value","Min","Max"]:
+            eval("bstar"+str(n)+"sb"+name).configure(state="enable")
+
+def bstarChangeOp(event,name):
+    if eval("bstarOpcb"+name).get()=="Add":
+        eval("bstarValuesb"+name).configure(from_="-inf", increment=1)
+    else:
+        eval("bstarValuesb"+name).configure(from_=0, increment=0.1)
+        
+
+def starBoostDisplay():
+    for i in range(16):
+        eval("bstarOpcb"+str(i)).set(["Add","Mult"][changedStarBoost[i][0]-1])
+        for n in range(3):
+            eval("bstar"+["Value","Min","Max"][n]+"sb"+str(i)).set(changedStarBoost[i][n+1])
+            
+def changeStarBoost():
+    message=""
+    for i in range(16):
+        if eval("bstarCheck"+str(i)).getvar(eval("bstarCheck"+str(i)).cget("variable"))=="1":
+            message=message+" "+starBoostStatsList[i]+","
+            changedStarBoost[i][0]=eval("bstarOpcb"+str(i)).get()
+            for n in range(3):
+                changedStarBoost[i][n+1]=eval("bstar"+["Value","Min","Max"][n]+"sb"+str(i)).get()
+    recapList.configure(state="normal")
+    if message!="":
+        message=message.rstrip(",")
+        if message.find(",")!=-1:
+            message1=message.rsplit(", ",1)
+            message=message1[0]+" and "+message1[1]
+        recapList.insert(tk.END,message.lstrip(" ")+" star boosts changed\n")
+        recapList.configure(state="disabled")
+    else:
+        recapList.insert(tk.END,"No stat selected\n")
+    recapList.configure(state="disabled")
+
+def resetStarBoost():
+    message=""
+    for i in range(16):
+        if eval("bstarCheck"+str(i)).getvar(eval("bstarCheck"+str(i)).cget("variable"))=="1":
+            message=message+" "+starBoostStatsList[i]+","
+            for n in range(4):
+                changedStarBoost[i][n]=defaultStarBoost[i][n]
+    recapList.configure(state="normal")
+    starBoostDisplay()
+    if message!="":
+        message=message.rstrip(",")
+        if message.find(",")!=-1:
+            message1=message.rsplit(", ",1)
+            message=message1[0]+" and "+message1[1]
+        recapList.insert(tk.END,message.lstrip(" ")+" star boosts reset\n")
+        recapList.configure(state="disabled")
+    else:
+        recapList.insert(tk.END,"No stat selected\n")
+    recapList.configure(state="disabled")
+    
+def resetStarBoostA():
+    for i in range(16):
+        for n in range(4):
+            changedStarBoost[i][n]=defaultStarBoost[i][n]
+    starBoostDisplay()
+    recapList.configure(state="normal")
+    recapList.insert(tk.END,"All star boosts reset\n")
+    recapList.configure(state="disabled")
+
 #main loop
 root = tk.Tk()
 root.geometry("1200x720")
@@ -2873,6 +4246,9 @@ statsTabs.add(manualStatsFrame, text="Stats Editor")
 randomStatsFrame = tk.Frame(statsTabs)
 randomStatsFrame.pack()
 statsTabs.add(randomStatsFrame, text="Stats Randomizer")
+advancedStatsFrame = tk.Frame(statsTabs)
+advancedStatsFrame.pack()
+statsTabs.add(advancedStatsFrame, text="Advanced Stats")
 trajFrame = tk.LabelFrame(statsTabs)
 trajFrame.pack()
 statsTabs.add(trajFrame, text="Traj Heights Editor")
@@ -2885,6 +4261,22 @@ statsTabs.add(wackyFrame, text="Wacky Stuff")
 creditsFrame = tk.Frame(statsTabs)
 creditsFrame.pack()
 statsTabs.add(creditsFrame, text="Credits")
+
+advancedStatsTabs = ttk.Notebook(advancedStatsFrame)
+advancedStatsTabs.pack(side=tk.LEFT,anchor=tk.N,padx=5)
+
+hitboxesFrame = tk.Frame(advancedStatsTabs)
+hitboxesFrame.pack()
+advancedStatsTabs.add(hitboxesFrame, text="Hitboxes")
+speedsFrame = tk.Frame(advancedStatsTabs)
+speedsFrame.pack()
+advancedStatsTabs.add(speedsFrame, text="Speeds")
+starGainFrame = tk.Frame(advancedStatsTabs)
+starGainFrame.pack()
+advancedStatsTabs.add(starGainFrame, text="Star Gain")
+starBoostFrame = tk.Frame(advancedStatsTabs)
+starBoostFrame.pack()
+advancedStatsTabs.add(starBoostFrame, text="Star Boosts")
 
 #Chemistry setup
 
@@ -3038,9 +4430,12 @@ glitchFrame.columnconfigure(1, weight=1)
 dangerFrame = tk.LabelFrame(manualStatsFrame, text="Warning : giving a character both will crash", fg="DarkOrange2")
 dangerFrame.grid(row=5,column=0,rowspan=2, columnspan=2, sticky=tk.EW)
 dangerFrame.columnconfigure(1, weight=1)
+pitchingFrame = tk.LabelFrame(manualStatsFrame, text="More pitching stats")
+pitchingFrame.grid(row=13,column=2,rowspan=7, columnspan=2, sticky=tk.EW)
+pitchingFrame.columnconfigure(1, weight=1)
 
-labelPlayer = tk.Label(manualStatsFrame, text="Player(s) :", anchor=tk.W)
-labelPlayer.grid(row=0,column=0,sticky=tk.EW)
+statLabelPlayer = tk.Label(manualStatsFrame, text="Player(s) :", anchor=tk.W)
+statLabelPlayer.grid(row=0,column=0,sticky=tk.EW)
 checkStat0 = tk.Checkbutton(glitchFrame, text="Pitching Stance :", anchor=tk.W, command=partial(statCheckButton,"0"))
 checkStat0.grid(row=0,column=0,sticky=tk.EW)
 checkStat1 = tk.Checkbutton(glitchFrame, text="Batting Stance :", anchor=tk.W, command=partial(statCheckButton,"1"))
@@ -3101,11 +4496,23 @@ checkStat3 = tk.Checkbutton(manualStatsFrame, text="Unknown Stat (old traj):", a
 checkStat3.grid(row=11,column=2,sticky=tk.EW)
 checkStat25 = tk.Checkbutton(manualStatsFrame, text="Unknown Stat (old stamina):", anchor=tk.W, command=partial(statCheckButton,"25"))
 checkStat25.grid(row=12,column=2,sticky=tk.EW)
+checkStat30 = tk.Checkbutton(pitchingFrame, text="Wind up charge :", anchor=tk.W, command=partial(statCheckButton,"30"))
+checkStat30.grid(row=0,column=0,sticky=tk.EW)
+checkStatPrecharge = tk.Checkbutton(pitchingFrame, text="Force precharge :", anchor=tk.W, command=partial(statCheckButton,"Precharge"), state="disable")
+checkStatPrecharge.grid(row=1,column=0,sticky=tk.EW,padx=(5,0))
+checkStat31 = tk.Checkbutton(pitchingFrame, text="Wind up captain star :", anchor=tk.W, command=partial(statCheckButton,"31"))
+checkStat31.grid(row=2,column=0,sticky=tk.EW)
+checkStat32 = tk.Checkbutton(pitchingFrame, text="Wind up curve :", anchor=tk.W, command=partial(statCheckButton,"32"))
+checkStat32.grid(row=3,column=0,sticky=tk.EW)
+checkStat33 = tk.Checkbutton(pitchingFrame, text="Change up speed :", anchor=tk.W, command=partial(statCheckButton,"33"))
+checkStat33.grid(row=4,column=0,sticky=tk.EW)
+checkStat34 = tk.Checkbutton(pitchingFrame, text="Change up height :", anchor=tk.W, command=partial(statCheckButton,"34"))
+checkStat34.grid(row=5,column=0,sticky=tk.EW)
 
-cbPlayer = ttk.Combobox(manualStatsFrame, width=25, values=comboList, state="readonly")
-cbPlayer.set("Pick a character/group")
-cbPlayer.grid(row=0,column=1)
-cbPlayer.bind('<<ComboboxSelected>>', statPlayerChange)
+cbStatPlayer = ttk.Combobox(manualStatsFrame, width=25, values=comboList, state="readonly")
+cbStatPlayer.set("Pick a character/group")
+cbStatPlayer.grid(row=0,column=1)
+cbStatPlayer.bind('<<ComboboxSelected>>', statPlayerChange)
 sbStat0 = ttk.Combobox(glitchFrame, width=19, values=["Right","Left"], state="disabled")
 sbStat0.grid(row=0,column=1,sticky=tk.E,padx=15)
 sbStat1 = ttk.Combobox(glitchFrame, width=19, values=["Right","Left"], state="disabled")
@@ -3167,13 +4574,28 @@ sbStat3 = ttk.Spinbox(manualStatsFrame, from_=0, to=2, state="disabled")
 sbStat3.grid(row=11,column=3)
 sbStat25 = ttk.Spinbox(manualStatsFrame, from_=0, to=100, state="disabled")
 sbStat25.grid(row=12,column=3)
+sbStat30 = ttk.Spinbox(pitchingFrame, from_=0, to="inf", state="disabled")
+sbStat30.grid(row=0,column=1,sticky=tk.E,padx=15)
+sbStatPrecharge = ttk.Combobox(pitchingFrame, width=19, values=["No","Yes"], state="disabled")
+sbStatPrecharge.grid(row=1,column=1,sticky=tk.E,padx=15)
+sbStatPrecharge.bind('<<ComboboxSelected>>', statPrechargeChange)
+sbStat31 = ttk.Spinbox(pitchingFrame, from_=0, to="inf", state="disabled")
+sbStat31.grid(row=2,column=1,sticky=tk.E,padx=15)
+sbStat32 = ttk.Spinbox(pitchingFrame, from_=0, to="inf", state="disabled")
+sbStat32.grid(row=3,column=1,sticky=tk.E,padx=15)
+sbStat33 = ttk.Spinbox(pitchingFrame, from_="-inf", to="inf", increment=0.1, state="disabled")
+sbStat33.grid(row=4,column=1,sticky=tk.E,padx=15)
+sbStat34 = ttk.Spinbox(pitchingFrame, from_=0, to="inf", state="disabled")
+sbStat34.grid(row=5,column=1,sticky=tk.E,padx=15)
+
+
 
 statsActionFrame = tk.LabelFrame(manualStatsFrame, text="Actions")
 statsActionFrame.grid(row=0,column=2,rowspan=6,padx=20)
 statsChange = tk.Button(statsActionFrame, text="Change Stats", command=changeStats)
 statsChange.pack(pady=2)
-statsChange = tk.Button(statsActionFrame, text="Change Stats for everyone", command=changeStatsE)
-statsChange.pack(pady=5)
+statsChangeE = tk.Button(statsActionFrame, text="Change Stats for everyone", command=changeStatsE)
+statsChangeE.pack(pady=5)
 statsReset = tk.Button(statsActionFrame, text="Reset Selected Stats", command=resetStats)
 statsReset.pack(pady=(5,0))
 statsAllReset = tk.Button(statsActionFrame, text="Reset All Stats", command=resetStatsA)
@@ -3631,9 +5053,874 @@ wackyDevModeVar = tk.IntVar()
 wackyDevMode = tk.Checkbutton(wackyFrame, text="Dev Mode (unlock limits on stat edition)",variable=wackyDevModeVar, command=devMode)
 wackyDevMode.grid(row=3,column=0)
 
+#Advanced Stats Tab
+#Hitboxes
+
+hitboxRadiusFrame = tk.LabelFrame(hitboxesFrame, text="Catch Radius")
+hitboxRadiusFrame.grid(row=3, column=0, rowspan=10, columnspan=3, sticky=tk.EW)
+hitboxRadiusFrame.columnconfigure(1, weight=1)
+hitboxHitboxFrame = tk.LabelFrame(hitboxesFrame, text="Hitbox Size")
+hitboxHitboxFrame.grid(row=13, column=0, rowspan=2, columnspan=3, sticky=tk.EW)
+hitboxHitboxFrame.columnconfigure(1, weight=1)
+
+hitboxLabelPlayer = tk.Label(hitboxesFrame, text="Player(s) :", anchor=tk.W)
+hitboxLabelPlayer.grid(row=0,column=0,sticky=tk.EW)
+checkHitbox1 = tk.Checkbutton(hitboxesFrame, text="Size scale (Menus) :", anchor=tk.W, command=partial(hitboxCheckButton,"1"))
+checkHitbox1.grid(row=1,column=0,sticky=tk.EW)
+checkHitbox0 = tk.Checkbutton(hitboxesFrame, text="Size scale (Gameplay) :", anchor=tk.W, command=partial(hitboxCheckButton,"0"))
+checkHitbox0.grid(row=2,column=0,sticky=tk.EW)
+checkHitbox2 = tk.Checkbutton(hitboxRadiusFrame, text="Regular :", anchor=tk.W, command=partial(hitboxCheckButton,"2"))
+checkHitbox2.grid(row=0,column=0,sticky=tk.EW)
+checkHitbox3 = tk.Checkbutton(hitboxRadiusFrame, text="Facing away :", anchor=tk.W, command=partial(hitboxCheckButton,"3"))
+checkHitbox3.grid(row=1,column=0,sticky=tk.EW)
+checkHitbox4 = tk.Checkbutton(hitboxRadiusFrame, text="???", anchor=tk.W, command=partial(hitboxCheckButton,"4"))
+checkHitbox4.grid(row=2,column=0,sticky=tk.EW)
+checkHitbox5 = tk.Checkbutton(hitboxRadiusFrame, text="Height :", anchor=tk.W, command=partial(hitboxCheckButton,"5"))
+checkHitbox5.grid(row=3,column=0,sticky=tk.EW)
+checkHitbox6 = tk.Checkbutton(hitboxRadiusFrame, text="???", anchor=tk.W, command=partial(hitboxCheckButton,"6"))
+checkHitbox6.grid(row=4,column=0,sticky=tk.EW)
+checkHitbox7 = tk.Checkbutton(hitboxRadiusFrame, text="???", anchor=tk.W, command=partial(hitboxCheckButton,"7"))
+checkHitbox7.grid(row=5,column=0,sticky=tk.EW)
+checkHitbox8 = tk.Checkbutton(hitboxRadiusFrame, text="Dive :", anchor=tk.W, command=partial(hitboxCheckButton,"8"))
+checkHitbox8.grid(row=6,column=0,sticky=tk.EW)
+checkHitbox9 = tk.Checkbutton(hitboxRadiusFrame, text="???", anchor=tk.W, command=partial(hitboxCheckButton,"9"))
+checkHitbox9.grid(row=7,column=0,sticky=tk.EW)
+checkHitbox10 = tk.Checkbutton(hitboxRadiusFrame, text="Jump :", anchor=tk.W, command=partial(hitboxCheckButton,"10"))
+checkHitbox10.grid(row=8,column=0,sticky=tk.EW)
+checkHitbox11 = tk.Checkbutton(hitboxRadiusFrame, text="???", anchor=tk.W, command=partial(hitboxCheckButton,"11"))
+checkHitbox11.grid(row=9,column=0,sticky=tk.EW)
+checkHitbox12 = tk.Checkbutton(hitboxHitboxFrame, text="Width :", anchor=tk.W, command=partial(hitboxCheckButton,"12"))
+checkHitbox12.grid(row=0,column=0,sticky=tk.EW)
+checkHitbox13 = tk.Checkbutton(hitboxHitboxFrame, text="Height :", anchor=tk.W, command=partial(hitboxCheckButton,"13"))
+checkHitbox13.grid(row=1,column=0,sticky=tk.EW)
+
+cbHitboxPlayer = ttk.Combobox(hitboxesFrame, width=25, values=comboList, state="readonly")
+cbHitboxPlayer.set("Pick a character/group")
+cbHitboxPlayer.grid(row=0,column=1)
+cbHitboxPlayer.bind('<<ComboboxSelected>>', hitboxPlayerChange)
+sbHitbox1 = ttk.Spinbox(hitboxesFrame, from_='-inf', to='inf', increment=0.01, state="disabled")
+sbHitbox1.grid(row=1,column=1, sticky=tk.E)
+sbHitbox0 = ttk.Spinbox(hitboxesFrame, from_='-inf', to='inf', increment=0.01, state="disabled")
+sbHitbox0.grid(row=2,column=1, sticky=tk.E)
+sbHitbox2 = ttk.Spinbox(hitboxRadiusFrame, from_='-inf', to='inf', state="disabled")
+sbHitbox2.grid(row=0,column=1, sticky=tk.E)
+sbHitbox3 = ttk.Spinbox(hitboxRadiusFrame, from_='-inf', to='inf', state="disabled")
+sbHitbox3.grid(row=1,column=1, sticky=tk.E)
+sbHitbox4 = ttk.Spinbox(hitboxRadiusFrame, from_='-inf', to='inf', state="disabled")
+sbHitbox4.grid(row=2,column=1, sticky=tk.E)
+sbHitbox5 = ttk.Spinbox(hitboxRadiusFrame, from_='-inf', to='inf', state="disabled")
+sbHitbox5.grid(row=3,column=1, sticky=tk.E)
+sbHitbox6 = ttk.Spinbox(hitboxRadiusFrame, from_='-inf', to='inf', state="disabled")
+sbHitbox6.grid(row=4,column=1, sticky=tk.E)
+sbHitbox7 = ttk.Spinbox(hitboxRadiusFrame, from_='-inf', to='inf', state="disabled")
+sbHitbox7.grid(row=5,column=1, sticky=tk.E)
+sbHitbox8 = ttk.Spinbox(hitboxRadiusFrame, from_='-inf', to='inf', state="disabled")
+sbHitbox8.grid(row=6,column=1, sticky=tk.E)
+sbHitbox9 = ttk.Spinbox(hitboxRadiusFrame, from_='-inf', to='inf', state="disabled")
+sbHitbox9.grid(row=7,column=1, sticky=tk.E)
+sbHitbox10 = ttk.Spinbox(hitboxRadiusFrame, from_='-inf', to='inf', state="disabled")
+sbHitbox10.grid(row=8,column=1, sticky=tk.E)
+sbHitbox11 = ttk.Spinbox(hitboxRadiusFrame, from_='-inf', to='inf', state="disabled")
+sbHitbox11.grid(row=9,column=1, sticky=tk.E)
+sbHitbox12 = ttk.Spinbox(hitboxHitboxFrame, from_='-inf', to='inf', state="disabled")
+sbHitbox12.grid(row=0,column=1, sticky=tk.E)
+sbHitbox13 = ttk.Spinbox(hitboxHitboxFrame, from_='-inf', to='inf', state="disabled")
+sbHitbox13.grid(row=1,column=1, sticky=tk.E)
+
+hitboxCompute = tk.Button(hitboxesFrame, text="Final Value :", command=computeHitboxValue)
+hitboxCompute.grid(row=2,column=2, padx = 18)
+hitboxRecap2 = tk.Text(hitboxRadiusFrame, height = 1, width = 10, state="disable")
+hitboxRecap2.grid(row=0,column=2, padx = 10)
+hitboxRecap3 = tk.Text(hitboxRadiusFrame, height = 1, width = 10, state="disable")
+hitboxRecap3.grid(row=1,column=2)
+hitboxRecap4 = tk.Text(hitboxRadiusFrame, height = 1, width = 10, state="disable")
+hitboxRecap4.grid(row=2,column=2)
+hitboxRecap5 = tk.Text(hitboxRadiusFrame, height = 1, width = 10, state="disable")
+hitboxRecap5.grid(row=3,column=2)
+hitboxRecap6 = tk.Text(hitboxRadiusFrame, height = 1, width = 10, state="disable")
+hitboxRecap6.grid(row=4,column=2)
+hitboxRecap7 = tk.Text(hitboxRadiusFrame, height = 1, width = 10, state="disable")
+hitboxRecap7.grid(row=5,column=2)
+hitboxRecap8 = tk.Text(hitboxRadiusFrame, height = 1, width = 10, state="disable")
+hitboxRecap8.grid(row=6,column=2)
+hitboxRecap9 = tk.Text(hitboxRadiusFrame, height = 1, width = 10, state="disable")
+hitboxRecap9.grid(row=7,column=2)
+hitboxRecap10 = tk.Text(hitboxRadiusFrame, height = 1, width = 10, state="disable")
+hitboxRecap10.grid(row=8,column=2)
+hitboxRecap11 = tk.Text(hitboxRadiusFrame, height = 1, width = 10, state="disable")
+hitboxRecap11.grid(row=9,column=2)
+hitboxRecap12 = tk.Text(hitboxHitboxFrame, height = 1, width = 10, state="disable")
+hitboxRecap12.grid(row=0,column=2, padx = 10)
+hitboxRecap13 = tk.Text(hitboxHitboxFrame, height = 1, width = 10, state="disable")
+hitboxRecap13.grid(row=1,column=2)
+
+hitboxActionFrame = tk.LabelFrame(hitboxesFrame, text="Actions")
+hitboxActionFrame.grid(row=0,column=3,rowspan=6,padx=20)
+hitboxChange = tk.Button(hitboxActionFrame, text="Change Hitboxes", command=changeHitbox)
+hitboxChange.pack(pady=2)
+hitboxChangeE = tk.Button(hitboxActionFrame, text="Change Hitboxes for everyone", command=changeHitboxE)
+hitboxChangeE.pack(pady=5)
+hitboxReset = tk.Button(hitboxActionFrame, text="Reset Selected Hitboxes", command=resetHitbox)
+hitboxReset.pack(pady=(5,0))
+hitboxAllReset = tk.Button(hitboxActionFrame, text="Reset All Hitboxes", command=resetHitboxA)
+hitboxAllReset.pack(pady=(0,5))
+hitboxResetEveryone = tk.Button(hitboxActionFrame, text="Reset Selected Hitboxes for everyone", command=resetHitboxE)
+hitboxResetEveryone.pack(pady=(5,0))
+hitboxAllResetEveryone = tk.Button(hitboxActionFrame, text="Reset All Hitboxes for everyone", command=resetHitboxAE)
+hitboxAllResetEveryone.pack(pady=(0,5))
+
+#Speeds
+speedTableFrame = tk.Frame(speedsFrame)
+speedTableFrame.grid(row=1,column=0, rowspan=23, columnspan=6)
+
+speedLowLabelLabel = tk.Label(speedTableFrame, text = "Speed stat :")
+speedLowLabelLabel.grid(row=0,column=0)
+speed00Check = tk.Checkbutton(speedTableFrame, text="0 :", anchor=tk.W, command=partial(speedCheckButton,"00"))
+speed00Check.grid(row=1,column=0,sticky=tk.EW)
+speed10Check = tk.Checkbutton(speedTableFrame, text="10 :", anchor=tk.W, command=partial(speedCheckButton,"10"))
+speed10Check.grid(row=2,column=0,sticky=tk.EW)
+speed20Check = tk.Checkbutton(speedTableFrame, text="20 :", anchor=tk.W, command=partial(speedCheckButton,"20"))
+speed20Check.grid(row=3,column=0,sticky=tk.EW)
+speed30Check = tk.Checkbutton(speedTableFrame, text="30 :", anchor=tk.W, command=partial(speedCheckButton,"30"))
+speed30Check.grid(row=4,column=0,sticky=tk.EW)
+speed40Check = tk.Checkbutton(speedTableFrame, text="40 :", anchor=tk.W, command=partial(speedCheckButton,"40"))
+speed40Check.grid(row=5,column=0,sticky=tk.EW)
+speed50Check = tk.Checkbutton(speedTableFrame, text="50 :", anchor=tk.W, command=partial(speedCheckButton,"50"))
+speed50Check.grid(row=6,column=0,sticky=tk.EW)
+speed60Check = tk.Checkbutton(speedTableFrame, text="60 :", anchor=tk.W, command=partial(speedCheckButton,"60"))
+speed60Check.grid(row=7,column=0,sticky=tk.EW)
+speed70Check = tk.Checkbutton(speedTableFrame, text="70 :", anchor=tk.W, command=partial(speedCheckButton,"70"))
+speed70Check.grid(row=8,column=0,sticky=tk.EW)
+speed80Check = tk.Checkbutton(speedTableFrame, text="80 :", anchor=tk.W, command=partial(speedCheckButton,"80"))
+speed80Check.grid(row=9,column=0,sticky=tk.EW)
+speed90Check = tk.Checkbutton(speedTableFrame, text="90 :", anchor=tk.W, command=partial(speedCheckButton,"90"))
+speed90Check.grid(row=10,column=0,sticky=tk.EW)
+speed100Check = tk.Checkbutton(speedTableFrame, text="100 :", anchor=tk.W, command=partial(speedCheckButton,"100"))
+speed100Check.grid(row=11,column=0,sticky=tk.EW)
+speed110Check = tk.Checkbutton(speedTableFrame, text="110 :", anchor=tk.W, command=partial(speedCheckButton,"110"))
+speed110Check.grid(row=12,column=0,sticky=tk.EW)
+speed120Check = tk.Checkbutton(speedTableFrame, text="120 :", anchor=tk.W, command=partial(speedCheckButton,"120"))
+speed120Check.grid(row=13,column=0,sticky=tk.EW)
+speed130Check = tk.Checkbutton(speedTableFrame, text="130 :", anchor=tk.W, command=partial(speedCheckButton,"130"))
+speed130Check.grid(row=14,column=0,sticky=tk.EW)
+speed140Check = tk.Checkbutton(speedTableFrame, text="140 :", anchor=tk.W, command=partial(speedCheckButton,"140"))
+speed140Check.grid(row=15,column=0,sticky=tk.EW)
+speed150Check = tk.Checkbutton(speedTableFrame, text="150 :", anchor=tk.W, command=partial(speedCheckButton,"150"))
+speed150Check.grid(row=16,column=0,sticky=tk.EW)
+speed160Check = tk.Checkbutton(speedTableFrame, text="160 :", anchor=tk.W, command=partial(speedCheckButton,"160"))
+speed160Check.grid(row=17,column=0,sticky=tk.EW)
+speed170Check = tk.Checkbutton(speedTableFrame, text="170 :", anchor=tk.W, command=partial(speedCheckButton,"170"))
+speed170Check.grid(row=18,column=0,sticky=tk.EW)
+speed180Check = tk.Checkbutton(speedTableFrame, text="180 :", anchor=tk.W, command=partial(speedCheckButton,"180"))
+speed180Check.grid(row=19,column=0,sticky=tk.EW)
+speed190Check = tk.Checkbutton(speedTableFrame, text="190 :", anchor=tk.W, command=partial(speedCheckButton,"190"))
+speed190Check.grid(row=20,column=0,sticky=tk.EW)
+speed200Check = tk.Checkbutton(speedTableFrame, text="200 :", anchor=tk.W, command=partial(speedCheckButton,"200"))
+speed200Check.grid(row=21,column=0,sticky=tk.EW)
+
+speedHighLabelLabel = tk.Label(speedTableFrame, text = "Speed stat :")
+speedHighLabelLabel.grid(row=0,column=3,padx=(10,0))
+speed210Check = tk.Checkbutton(speedTableFrame, text="210 :", anchor=tk.W, command=partial(speedCheckButton,"210"))
+speed210Check.grid(row=1,column=3,sticky=tk.EW)
+speed220Check = tk.Checkbutton(speedTableFrame, text="220 :", anchor=tk.W, command=partial(speedCheckButton,"220"))
+speed220Check.grid(row=2,column=3,sticky=tk.EW)
+speed230Check = tk.Checkbutton(speedTableFrame, text="230 :", anchor=tk.W, command=partial(speedCheckButton,"230"))
+speed230Check.grid(row=3,column=3,sticky=tk.EW)
+speed240Check = tk.Checkbutton(speedTableFrame, text="240 :", anchor=tk.W, command=partial(speedCheckButton,"240"))
+speed240Check.grid(row=4,column=3,sticky=tk.EW)
+speed250Check = tk.Checkbutton(speedTableFrame, text="250 :", anchor=tk.W, command=partial(speedCheckButton,"250"))
+speed250Check.grid(row=5,column=3,sticky=tk.EW)
+speed260Check = tk.Checkbutton(speedTableFrame, text="260 :", anchor=tk.W, command=partial(speedCheckButton,"260"))
+speed260Check.grid(row=6,column=3,sticky=tk.EW)
+speed270Check = tk.Checkbutton(speedTableFrame, text="270 :", anchor=tk.W, command=partial(speedCheckButton,"270"))
+speed270Check.grid(row=7,column=3,sticky=tk.EW)
+speed280Check = tk.Checkbutton(speedTableFrame, text="280 :", anchor=tk.W, command=partial(speedCheckButton,"280"))
+speed280Check.grid(row=8,column=3,sticky=tk.EW)
+speed290Check = tk.Checkbutton(speedTableFrame, text="290 :", anchor=tk.W, command=partial(speedCheckButton,"290"))
+speed290Check.grid(row=9,column=3,sticky=tk.EW)
+speed300Check = tk.Checkbutton(speedTableFrame, text="300 :", anchor=tk.W, command=partial(speedCheckButton,"300"))
+speed300Check.grid(row=10,column=3,sticky=tk.EW)
+speed310Check = tk.Checkbutton(speedTableFrame, text="310 :", anchor=tk.W, command=partial(speedCheckButton,"310"))
+speed310Check.grid(row=11,column=3,sticky=tk.EW)
+speed320Check = tk.Checkbutton(speedTableFrame, text="320 :", anchor=tk.W, command=partial(speedCheckButton,"320"))
+speed320Check.grid(row=12,column=3,sticky=tk.EW)
+speed330Check = tk.Checkbutton(speedTableFrame, text="330 :", anchor=tk.W, command=partial(speedCheckButton,"330"))
+speed330Check.grid(row=13,column=3,sticky=tk.EW)
+speed340Check = tk.Checkbutton(speedTableFrame, text="340 :", anchor=tk.W, command=partial(speedCheckButton,"340"))
+speed340Check.grid(row=14,column=3,sticky=tk.EW)
+speed350Check = tk.Checkbutton(speedTableFrame, text="350 :", anchor=tk.W, command=partial(speedCheckButton,"350"))
+speed350Check.grid(row=15,column=3,sticky=tk.EW)
+speed360Check = tk.Checkbutton(speedTableFrame, text="360 :", anchor=tk.W, command=partial(speedCheckButton,"360"))
+speed360Check.grid(row=16,column=3,sticky=tk.EW)
+speed370Check = tk.Checkbutton(speedTableFrame, text="370 :", anchor=tk.W, command=partial(speedCheckButton,"370"))
+speed370Check.grid(row=17,column=3,sticky=tk.EW)
+speed380Check = tk.Checkbutton(speedTableFrame, text="380 :", anchor=tk.W, command=partial(speedCheckButton,"380"))
+speed380Check.grid(row=18,column=3,sticky=tk.EW)
+speed390Check = tk.Checkbutton(speedTableFrame, text="390 :", anchor=tk.W, command=partial(speedCheckButton,"390"))
+speed390Check.grid(row=19,column=3,sticky=tk.EW)
+speed400Check = tk.Checkbutton(speedTableFrame, text="400 :", anchor=tk.W, command=partial(speedCheckButton,"400"))
+speed400Check.grid(row=20,column=3,sticky=tk.EW)
+speed410Check = tk.Checkbutton(speedTableFrame, text="410 :", anchor=tk.W, command=partial(speedCheckButton,"410"))
+speed410Check.grid(row=21,column=3,sticky=tk.EW)
+speed420Check = tk.Checkbutton(speedTableFrame, text="420 :", anchor=tk.W, command=partial(speedCheckButton,"420"))
+speed420Check.grid(row=22,column=3,sticky=tk.EW)
+
+speedLowBaseLabel = tk.Label(speedTableFrame, text = "Baserunning :")
+speedLowBaseLabel.grid(row=0,column=1)
+speed00sbBase = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed00sbBase.grid(row=1, column=1)
+speed10sbBase = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed10sbBase.grid(row=2,column=1)
+speed20sbBase = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed20sbBase.grid(row=3,column=1)
+speed30sbBase = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed30sbBase.grid(row=4,column=1)
+speed40sbBase = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed40sbBase.grid(row=5,column=1)
+speed50sbBase = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed50sbBase.grid(row=6,column=1)
+speed60sbBase = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed60sbBase.grid(row=7,column=1)
+speed70sbBase = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed70sbBase.grid(row=8,column=1)
+speed80sbBase = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed80sbBase.grid(row=9,column=1)
+speed90sbBase = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed90sbBase.grid(row=10,column=1)
+speed100sbBase = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed100sbBase.grid(row=11,column=1)
+speed110sbBase = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed110sbBase.grid(row=12,column=1)
+speed120sbBase = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed120sbBase.grid(row=13,column=1)
+speed130sbBase = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed130sbBase.grid(row=14,column=1)
+speed140sbBase = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed140sbBase.grid(row=15,column=1)
+speed150sbBase = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed150sbBase.grid(row=16,column=1)
+speed160sbBase = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed160sbBase.grid(row=17,column=1)
+speed170sbBase = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed170sbBase.grid(row=18,column=1)
+speed180sbBase = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed180sbBase.grid(row=19,column=1)
+speed190sbBase = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed190sbBase.grid(row=20,column=1)
+speed200sbBase = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed200sbBase.grid(row=21,column=1)
+
+speedHighBaseLabel = tk.Label(speedTableFrame, text = "Baserunning :")
+speedHighBaseLabel.grid(row=0,column=4)
+speed210sbBase = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed210sbBase.grid(row=1,column=4)
+speed220sbBase = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed220sbBase.grid(row=2,column=4)
+speed230sbBase = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed230sbBase.grid(row=3,column=4)
+speed240sbBase = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed240sbBase.grid(row=4,column=4)
+speed250sbBase = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed250sbBase.grid(row=5,column=4)
+speed260sbBase = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed260sbBase.grid(row=6,column=4)
+speed270sbBase = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed270sbBase.grid(row=7,column=4)
+speed280sbBase = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed280sbBase.grid(row=8,column=4)
+speed290sbBase = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed290sbBase.grid(row=9,column=4)
+speed300sbBase = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed300sbBase.grid(row=10,column=4)
+speed310sbBase = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed310sbBase.grid(row=11,column=4)
+speed320sbBase = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed320sbBase.grid(row=12,column=4)
+speed330sbBase = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed330sbBase.grid(row=13,column=4)
+speed340sbBase = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed340sbBase.grid(row=14,column=4)
+speed350sbBase = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed350sbBase.grid(row=15,column=4)
+speed360sbBase = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed360sbBase.grid(row=16,column=4)
+speed370sbBase = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed370sbBase.grid(row=17,column=4)
+speed380sbBase = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed380sbBase.grid(row=18,column=4)
+speed390sbBase = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed390sbBase.grid(row=19,column=4)
+speed400sbBase = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed400sbBase.grid(row=20,column=4)
+speed410sbBase = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed410sbBase.grid(row=21,column=4)
+speed420sbBase = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed420sbBase.grid(row=22,column=4)
+
+speedLowFieldLabel = tk.Label(speedTableFrame, text = "Fielding :")
+speedLowFieldLabel.grid(row=0,column=2)
+speed00sbField = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed00sbField.grid(row=1, column=2)
+speed10sbField = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed10sbField.grid(row=2,column=2)
+speed20sbField = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed20sbField.grid(row=3,column=2)
+speed30sbField = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed30sbField.grid(row=4,column=2)
+speed40sbField = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed40sbField.grid(row=5,column=2)
+speed50sbField = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed50sbField.grid(row=6,column=2)
+speed60sbField = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed60sbField.grid(row=7,column=2)
+speed70sbField = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed70sbField.grid(row=8,column=2)
+speed80sbField = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed80sbField.grid(row=9,column=2)
+speed90sbField = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed90sbField.grid(row=10,column=2)
+speed100sbField = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed100sbField.grid(row=11,column=2)
+speed110sbField = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed110sbField.grid(row=12,column=2)
+speed120sbField = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed120sbField.grid(row=13,column=2)
+speed130sbField = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed130sbField.grid(row=14,column=2)
+speed140sbField = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed140sbField.grid(row=15,column=2)
+speed150sbField = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed150sbField.grid(row=16,column=2)
+speed160sbField = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed160sbField.grid(row=17,column=2)
+speed170sbField = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed170sbField.grid(row=18,column=2)
+speed180sbField = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed180sbField.grid(row=19,column=2)
+speed190sbField = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed190sbField.grid(row=20,column=2)
+speed200sbField = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed200sbField.grid(row=21,column=2)
+
+speedHighFieldLabel = tk.Label(speedTableFrame, text = "Fielding :")
+speedHighFieldLabel.grid(row=0,column=5)
+speed210sbField = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed210sbField.grid(row=1,column=5)
+speed220sbField = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed220sbField.grid(row=2,column=5)
+speed230sbField = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed230sbField.grid(row=3,column=5)
+speed240sbField = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed240sbField.grid(row=4,column=5)
+speed250sbField = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed250sbField.grid(row=5,column=5)
+speed260sbField = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed260sbField.grid(row=6,column=5)
+speed270sbField = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed270sbField.grid(row=7,column=5)
+speed280sbField = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed280sbField.grid(row=8,column=5)
+speed290sbField = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed290sbField.grid(row=9,column=5)
+speed300sbField = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed300sbField.grid(row=10,column=5)
+speed310sbField = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed310sbField.grid(row=11,column=5)
+speed320sbField = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed320sbField.grid(row=12,column=5)
+speed330sbField = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed330sbField.grid(row=13,column=5)
+speed340sbField = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed340sbField.grid(row=14,column=5)
+speed350sbField = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed350sbField.grid(row=15,column=5)
+speed360sbField = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed360sbField.grid(row=16,column=5)
+speed370sbField = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed370sbField.grid(row=17,column=5)
+speed380sbField = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed380sbField.grid(row=18,column=5)
+speed390sbField = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed390sbField.grid(row=19,column=5)
+speed400sbField = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed400sbField.grid(row=20,column=5)
+speed410sbField = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed410sbField.grid(row=21,column=5)
+speed420sbField = ttk.Spinbox(speedTableFrame, width=10, from_=0, to="inf", increment=0.001, state="disable")
+speed420sbField.grid(row=22,column=5)
+
+speedDisplay()
+
+speedActionFrame = tk.LabelFrame(speedTableFrame,text="Actions")
+speedActionFrame.grid(row=0,column=6,rowspan=5,columnspan=2,padx=5)
+speedChange = tk.Button(speedActionFrame, text="Change speeds", command=changeSpeed)
+speedChange.pack(pady=5)
+speedReset = tk.Button(speedActionFrame, text="Reset Selected Speeds", command=resetSpeed)
+speedReset.pack(pady=(5,0))
+speedAllReset = tk.Button(speedActionFrame, text="Reset All Speeds", command=resetSpeedA)
+speedAllReset.pack(pady=(0,5))
+
+
+#Star Earned
+
+estarTeamFrame = tk.LabelFrame(starGainFrame, text="Team Stars")
+estarTeamFrame.grid(row=0,column=0, rowspan=21,sticky=tk.EW)
+
+estarTeamLabel = tk.Label(estarTeamFrame, text="Team :",anchor=tk.W)
+estarTeamLabel.grid(row=0,column=0,sticky=tk.EW,padx=5)
+estarcbTeam = ttk.Combobox(estarTeamFrame, width=13, values=teamList, state="readonly")
+estarcbTeam.set("Pick a team")
+estarcbTeam.grid(row=0,column=1,padx=5)
+estarcbTeam.bind('<<ComboboxSelected>>', estarTeamChange)
+
+estarCheck0 = tk.Checkbutton(estarTeamFrame, text=starEventsList[0]+" :", anchor=tk.W, command=partial(estarCheckButton,"0"))
+estarCheck0.grid(row=1,column=0,sticky=tk.EW)
+estarCheck1 = tk.Checkbutton(estarTeamFrame, text=starEventsList[1]+" :", anchor=tk.W, command=partial(estarCheckButton,"1"))
+estarCheck1.grid(row=2,column=0,sticky=tk.EW)
+estarCheck2 = tk.Checkbutton(estarTeamFrame, text=starEventsList[2]+" :", anchor=tk.W, command=partial(estarCheckButton,"2"))
+estarCheck2.grid(row=3,column=0,sticky=tk.EW)
+estarCheck3 = tk.Checkbutton(estarTeamFrame, text=starEventsList[3]+" :", anchor=tk.W, command=partial(estarCheckButton,"3"))
+estarCheck3.grid(row=4,column=0,sticky=tk.EW)
+estarCheck4 = tk.Checkbutton(estarTeamFrame, text=starEventsList[4]+" :", anchor=tk.W, command=partial(estarCheckButton,"4"))
+estarCheck4.grid(row=5,column=0,sticky=tk.EW)
+estarCheck5 = tk.Checkbutton(estarTeamFrame, text=starEventsList[5]+" :", anchor=tk.W, command=partial(estarCheckButton,"5"))
+estarCheck5.grid(row=6,column=0,sticky=tk.EW)
+estarCheck6 = tk.Checkbutton(estarTeamFrame, text=starEventsList[6]+" :", anchor=tk.W, command=partial(estarCheckButton,"6"))
+estarCheck6.grid(row=7,column=0,sticky=tk.EW)
+estarCheck7 = tk.Checkbutton(estarTeamFrame, text=starEventsList[7]+" :", anchor=tk.W, command=partial(estarCheckButton,"7"))
+estarCheck7.grid(row=8,column=0,sticky=tk.EW)
+estarCheck8 = tk.Checkbutton(estarTeamFrame, text=starEventsList[8]+" :", anchor=tk.W, command=partial(estarCheckButton,"8"))
+estarCheck8.grid(row=9,column=0,sticky=tk.EW)
+estarCheck9 = tk.Checkbutton(estarTeamFrame, text=starEventsList[9]+" :", anchor=tk.W, command=partial(estarCheckButton,"9"))
+estarCheck9.grid(row=10,column=0,sticky=tk.EW)
+estarCheck10 = tk.Checkbutton(estarTeamFrame, text=starEventsList[10]+" :", anchor=tk.W, command=partial(estarCheckButton,"10"))
+estarCheck10.grid(row=11,column=0,sticky=tk.EW)
+estarCheck11 = tk.Checkbutton(estarTeamFrame, text=starEventsList[11]+" :", anchor=tk.W, command=partial(estarCheckButton,"11"))
+estarCheck11.grid(row=12,column=0,sticky=tk.EW)
+estarCheck12 = tk.Checkbutton(estarTeamFrame, text=starEventsList[12]+" :", anchor=tk.W, command=partial(estarCheckButton,"12"))
+estarCheck12.grid(row=13,column=0,sticky=tk.EW)
+estarCheck13 = tk.Checkbutton(estarTeamFrame, text=starEventsList[13]+" :", anchor=tk.W, command=partial(estarCheckButton,"13"))
+estarCheck13.grid(row=14,column=0,sticky=tk.EW)
+estarCheck14 = tk.Checkbutton(estarTeamFrame, text=starEventsList[14]+" :", anchor=tk.W, command=partial(estarCheckButton,"14"))
+estarCheck14.grid(row=15,column=0,sticky=tk.EW)
+estarCheck15 = tk.Checkbutton(estarTeamFrame, text=starEventsList[15]+" :", anchor=tk.W, command=partial(estarCheckButton,"15"))
+estarCheck15.grid(row=16,column=0,sticky=tk.EW)
+estarCheck16 = tk.Checkbutton(estarTeamFrame, text=starEventsList[16]+" :", anchor=tk.W, command=partial(estarCheckButton,"16"))
+estarCheck16.grid(row=17,column=0,sticky=tk.EW)
+estarCheck17 = tk.Checkbutton(estarTeamFrame, text=starEventsList[17]+" :", anchor=tk.W, command=partial(estarCheckButton,"17"))
+estarCheck17.grid(row=18,column=0,sticky=tk.EW)
+estarCheck18 = tk.Checkbutton(estarTeamFrame, text=starEventsList[18]+" :", anchor=tk.W, command=partial(estarCheckButton,"18"))
+estarCheck18.grid(row=19,column=0,sticky=tk.EW)
+estarCheck19 = tk.Checkbutton(estarTeamFrame, text=starEventsList[19]+" :", anchor=tk.W, command=partial(estarCheckButton,"19"))
+estarCheck19.grid(row=20,column=0,sticky=tk.EW)
+
+estarCheck20 = tk.Checkbutton(estarTeamFrame, text=starEventsList[20]+" :", anchor=tk.W, command=partial(estarCheckButton,"20"))
+estarCheck20.grid(row=0,column=2,sticky=tk.EW)
+estarCheck21 = tk.Checkbutton(estarTeamFrame, text=starEventsList[21]+" :", anchor=tk.W, command=partial(estarCheckButton,"21"))
+estarCheck21.grid(row=1,column=2,sticky=tk.EW)
+estarCheck22 = tk.Checkbutton(estarTeamFrame, text=starEventsList[22]+" :", anchor=tk.W, command=partial(estarCheckButton,"22"))
+estarCheck22.grid(row=2,column=2,sticky=tk.EW)
+estarCheck23 = tk.Checkbutton(estarTeamFrame, text=starEventsList[23]+" :", anchor=tk.W, command=partial(estarCheckButton,"23"))
+estarCheck23.grid(row=3,column=2,sticky=tk.EW)
+estarCheck24 = tk.Checkbutton(estarTeamFrame, text=starEventsList[24]+" :", anchor=tk.W, command=partial(estarCheckButton,"24"))
+estarCheck24.grid(row=4,column=2,sticky=tk.EW)
+estarCheck25 = tk.Checkbutton(estarTeamFrame, text=starEventsList[25]+" :", anchor=tk.W, command=partial(estarCheckButton,"25"))
+estarCheck25.grid(row=5,column=2,sticky=tk.EW)
+estarCheck26 = tk.Checkbutton(estarTeamFrame, text=starEventsList[26]+" :", anchor=tk.W, command=partial(estarCheckButton,"26"))
+estarCheck26.grid(row=6,column=2,sticky=tk.EW)
+estarCheck27 = tk.Checkbutton(estarTeamFrame, text=starEventsList[27]+" :", anchor=tk.W, command=partial(estarCheckButton,"27"))
+estarCheck27.grid(row=7,column=2,sticky=tk.EW)
+estarCheck28 = tk.Checkbutton(estarTeamFrame, text=starEventsList[28]+" :", anchor=tk.W, command=partial(estarCheckButton,"28"))
+estarCheck28.grid(row=8,column=2,sticky=tk.EW)
+estarCheck29 = tk.Checkbutton(estarTeamFrame, text=starEventsList[29]+" :", anchor=tk.W, command=partial(estarCheckButton,"29"))
+estarCheck29.grid(row=9,column=2,sticky=tk.EW)
+estarCheck30 = tk.Checkbutton(estarTeamFrame, text=starEventsList[30]+" :", anchor=tk.W, command=partial(estarCheckButton,"30"))
+estarCheck30.grid(row=10,column=2,sticky=tk.EW)
+estarCheck31 = tk.Checkbutton(estarTeamFrame, text=starEventsList[31]+" :", anchor=tk.W, command=partial(estarCheckButton,"31"))
+estarCheck31.grid(row=11,column=2,sticky=tk.EW)
+estarCheck32 = tk.Checkbutton(estarTeamFrame, text=starEventsList[32]+" :", anchor=tk.W, command=partial(estarCheckButton,"32"))
+estarCheck32.grid(row=12,column=2,sticky=tk.EW)
+estarCheck33 = tk.Checkbutton(estarTeamFrame, text=starEventsList[33]+" :", anchor=tk.W, command=partial(estarCheckButton,"33"))
+estarCheck33.grid(row=13,column=2,sticky=tk.EW)
+estarCheck34 = tk.Checkbutton(estarTeamFrame, text=starEventsList[34]+" :", anchor=tk.W, command=partial(estarCheckButton,"34"))
+estarCheck34.grid(row=14,column=2,sticky=tk.EW)
+estarCheck35 = tk.Checkbutton(estarTeamFrame, text=starEventsList[35]+" :", anchor=tk.W, command=partial(estarCheckButton,"35"))
+estarCheck35.grid(row=15,column=2,sticky=tk.EW)
+estarCheck36 = tk.Checkbutton(estarTeamFrame, text=starEventsList[36]+" :", anchor=tk.W, command=partial(estarCheckButton,"36"))
+estarCheck36.grid(row=16,column=2,sticky=tk.EW)
+estarCheck37 = tk.Checkbutton(estarTeamFrame, text=starEventsList[37]+" :", anchor=tk.W, command=partial(estarCheckButton,"37"))
+estarCheck37.grid(row=17,column=2,sticky=tk.EW)
+estarCheck38 = tk.Checkbutton(estarTeamFrame, text=starEventsList[38]+" :", anchor=tk.W, command=partial(estarCheckButton,"38"))
+estarCheck38.grid(row=18,column=2,sticky=tk.EW)
+estarCheck39 = tk.Checkbutton(estarTeamFrame, text=starEventsList[39]+" :", anchor=tk.W, command=partial(estarCheckButton,"39"))
+estarCheck39.grid(row=19,column=2,sticky=tk.EW)
+estarCheck40 = tk.Checkbutton(estarTeamFrame, text=starEventsList[40]+" :", anchor=tk.W, command=partial(estarCheckButton,"40"))
+estarCheck40.grid(row=20,column=2,sticky=tk.EW)
+
+estarsb0 = ttk.Spinbox(estarTeamFrame, width=13, from_=-32768, to=32767, state="disable")
+estarsb0.grid(row=1,column=1)
+estarsb1 = ttk.Spinbox(estarTeamFrame, width=13, from_=-32768, to=32767, state="disable")
+estarsb1.grid(row=2,column=1)
+estarsb2 = ttk.Spinbox(estarTeamFrame, width=13, from_=-32768, to=32767, state="disable")
+estarsb2.grid(row=3,column=1)
+estarsb3 = ttk.Spinbox(estarTeamFrame, width=13, from_=-32768, to=32767, state="disable")
+estarsb3.grid(row=4,column=1)
+estarsb4 = ttk.Spinbox(estarTeamFrame, width=13, from_=-32768, to=32767, state="disable")
+estarsb4.grid(row=5,column=1)
+estarsb5 = ttk.Spinbox(estarTeamFrame, width=13, from_=-32768, to=32767, state="disable")
+estarsb5.grid(row=6,column=1)
+estarsb6 = ttk.Spinbox(estarTeamFrame, width=13, from_=-32768, to=32767, state="disable")
+estarsb6.grid(row=7,column=1)
+estarsb7 = ttk.Spinbox(estarTeamFrame, width=13, from_=-32768, to=32767, state="disable")
+estarsb7.grid(row=8,column=1)
+estarsb8 = ttk.Spinbox(estarTeamFrame, width=13, from_=-32768, to=32767, state="disable")
+estarsb8.grid(row=9,column=1)
+estarsb9 = ttk.Spinbox(estarTeamFrame, width=13, from_=-32768, to=32767, state="disable")
+estarsb9.grid(row=10,column=1)
+estarsb10 = ttk.Spinbox(estarTeamFrame, width=13, from_=-32768, to=32767, state="disable")
+estarsb10.grid(row=11,column=1)
+estarsb11 = ttk.Spinbox(estarTeamFrame, width=13, from_=-32768, to=32767, state="disable")
+estarsb11.grid(row=12,column=1)
+estarsb12 = ttk.Spinbox(estarTeamFrame, width=13, from_=-32768, to=32767, state="disable")
+estarsb12.grid(row=13,column=1)
+estarsb13 = ttk.Spinbox(estarTeamFrame, width=13, from_=-32768, to=32767, state="disable")
+estarsb13.grid(row=14,column=1)
+estarsb14 = ttk.Spinbox(estarTeamFrame, width=13, from_=-32768, to=32767, state="disable")
+estarsb14.grid(row=15,column=1)
+estarsb15 = ttk.Spinbox(estarTeamFrame, width=13, from_=-32768, to=32767, state="disable")
+estarsb15.grid(row=16,column=1)
+estarsb16 = ttk.Spinbox(estarTeamFrame, width=13, from_=-32768, to=32767, state="disable")
+estarsb16.grid(row=17,column=1)
+estarsb17 = ttk.Spinbox(estarTeamFrame, width=13, from_=-32768, to=32767, state="disable")
+estarsb17.grid(row=18,column=1)
+estarsb18 = ttk.Spinbox(estarTeamFrame, width=13, from_=-32768, to=32767, state="disable")
+estarsb18.grid(row=19,column=1)
+estarsb19 = ttk.Spinbox(estarTeamFrame, width=13, from_=-32768, to=32767, state="disable")
+estarsb19.grid(row=20,column=1)
+
+estarsb20 = ttk.Spinbox(estarTeamFrame, width=13, from_=-32768, to=32767, state="disable")
+estarsb20.grid(row=0,column=3)
+estarsb21 = ttk.Spinbox(estarTeamFrame, width=13, from_=-32768, to=32767, state="disable")
+estarsb21.grid(row=1,column=3)
+estarsb22 = ttk.Spinbox(estarTeamFrame, width=13, from_=-32768, to=32767, state="disable")
+estarsb22.grid(row=2,column=3)
+estarsb23 = ttk.Spinbox(estarTeamFrame, width=13, from_=-32768, to=32767, state="disable")
+estarsb23.grid(row=3,column=3)
+estarsb24 = ttk.Spinbox(estarTeamFrame, width=13, from_=-32768, to=32767, state="disable")
+estarsb24.grid(row=4,column=3)
+estarsb25 = ttk.Spinbox(estarTeamFrame, width=13, from_=-32768, to=32767, state="disable")
+estarsb25.grid(row=5,column=3)
+estarsb26 = ttk.Spinbox(estarTeamFrame, width=13, from_=-32768, to=32767, state="disable")
+estarsb26.grid(row=6,column=3)
+estarsb27 = ttk.Spinbox(estarTeamFrame, width=13, from_=-32768, to=32767, state="disable")
+estarsb27.grid(row=7,column=3)
+estarsb28 = ttk.Spinbox(estarTeamFrame, width=13, from_=-32768, to=32767, state="disable")
+estarsb28.grid(row=8,column=3)
+estarsb29 = ttk.Spinbox(estarTeamFrame, width=13, from_=-32768, to=32767, state="disable")
+estarsb29.grid(row=9,column=3)
+estarsb30 = ttk.Spinbox(estarTeamFrame, width=13, from_=-32768, to=32767, state="disable")
+estarsb30.grid(row=10,column=3)
+estarsb31 = ttk.Spinbox(estarTeamFrame, width=13, from_=-32768, to=32767, state="disable")
+estarsb31.grid(row=11,column=3)
+estarsb32 = ttk.Spinbox(estarTeamFrame, width=13, from_=-32768, to=32767, state="disable")
+estarsb32.grid(row=12,column=3)
+estarsb33 = ttk.Spinbox(estarTeamFrame, width=13, from_=-32768, to=32767, state="disable")
+estarsb33.grid(row=13,column=3)
+estarsb34 = ttk.Spinbox(estarTeamFrame, width=13, from_=-32768, to=32767, state="disable")
+estarsb34.grid(row=14,column=3)
+estarsb35 = ttk.Spinbox(estarTeamFrame, width=13, from_=-32768, to=32767, state="disable")
+estarsb35.grid(row=15,column=3)
+estarsb36 = ttk.Spinbox(estarTeamFrame, width=13, from_=-32768, to=32767, state="disable")
+estarsb36.grid(row=16,column=3)
+estarsb37 = ttk.Spinbox(estarTeamFrame, width=13, from_=-32768, to=32767, state="disable")
+estarsb37.grid(row=17,column=3)
+estarsb38 = ttk.Spinbox(estarTeamFrame, width=13, from_=-32768, to=32767, state="disable")
+estarsb38.grid(row=18,column=3)
+estarsb39 = ttk.Spinbox(estarTeamFrame, width=13, from_=-32768, to=32767, state="disable")
+estarsb39.grid(row=19,column=3)
+estarsb40 = ttk.Spinbox(estarTeamFrame, width=13, from_=-32768, to=32767, state="disable")
+estarsb40.grid(row=20,column=3)
+
+estarActionFrame = tk.LabelFrame(estarTeamFrame, text="Actions")
+estarActionFrame.grid(row=0, column=4, rowspan=13, sticky=tk.N, padx=5)
+estarChange = tk.Button(estarActionFrame, text="Change Star Gains", command=changeStarGain)
+estarChange.pack(pady=2)
+estarChangeE = tk.Button(estarActionFrame, text="Change Star Gains for every team", command=changeStarGainE)
+estarChangeE.pack(pady=5)
+estarReset = tk.Button(estarActionFrame, text="Reset Selected Star Gains", command=resetStarGain)
+estarReset.pack(pady=(5,0))
+estarResetA = tk.Button(estarActionFrame, text="Reset All Star Gains", command=resetStarGainA)
+estarResetA.pack(pady=(0,5))
+estarResetE = tk.Button(estarActionFrame, text="Reset Selected Star Gains\nfor every team", command=resetStarGainE)
+estarResetE.pack(pady=(5,0))
+estarResetAE = tk.Button(estarActionFrame, text="Reset All Star Gains\nfor every team", command=resetStarGainAE)
+estarResetAE.pack(pady=(0,5))
+
+estarHandicapFrame = tk.LabelFrame(starGainFrame, text="Handicap")
+estarHandicapFrame.grid(row=21,column=0, rowspan=4, columnspan=4, sticky=tk.W)
+
+estarHandicapCheck0 = tk.Checkbutton(estarHandicapFrame, text="Lead By :", anchor=tk.W, command=partial(estarHandicapCheckButton,"0"))
+estarHandicapCheck0.grid(row=0,column=0, sticky=tk.EW)
+estarHandicapCheck1 = tk.Checkbutton(estarHandicapFrame, text="Lead By :", anchor=tk.W, command=partial(estarHandicapCheckButton,"1"))
+estarHandicapCheck1.grid(row=1,column=0, sticky=tk.EW)
+estarHandicapCheck2 = tk.Checkbutton(estarHandicapFrame, text="Lead By :", anchor=tk.W, command=partial(estarHandicapCheckButton,"2"))
+estarHandicapCheck2.grid(row=2,column=0, sticky=tk.EW)
+estarHandicapCheck3 = tk.Checkbutton(estarHandicapFrame, text="Lead By :", anchor=tk.W, command=partial(estarHandicapCheckButton,"3"))
+estarHandicapCheck3.grid(row=3,column=0, sticky=tk.EW)
+
+estarHandicapLeadsb0 = ttk.Spinbox(estarHandicapFrame, width=15, from_="-inf", to="inf", increment=1, state="disable")
+estarHandicapLeadsb0.grid(row=0,column=1)
+estarHandicapLeadsb1 = ttk.Spinbox(estarHandicapFrame, width=15, from_="-inf", to="inf", increment=1, state="disable")
+estarHandicapLeadsb1.grid(row=1,column=1)
+estarHandicapLeadsb2 = ttk.Spinbox(estarHandicapFrame, width=15, from_="-inf", to="inf", increment=1, state="disable")
+estarHandicapLeadsb2.grid(row=2,column=1)
+estarHandicapLeadsb3 = ttk.Spinbox(estarHandicapFrame, width=15, from_="-inf", to="inf", increment=1, state="disable")
+estarHandicapLeadsb3.grid(row=3,column=1)
+
+estarHandicapLabel0 = tk.Label(estarHandicapFrame, text="Multiply By :")
+estarHandicapLabel0.grid(row=0,column=2,padx=5)
+estarHandicapLabel1 = tk.Label(estarHandicapFrame, text="Multiply By :")
+estarHandicapLabel1.grid(row=1,column=2,padx=5)
+estarHandicapLabel2 = tk.Label(estarHandicapFrame, text="Multiply By :")
+estarHandicapLabel2.grid(row=2,column=2,padx=5)
+estarHandicapLabel3 = tk.Label(estarHandicapFrame, text="Multiply By :")
+estarHandicapLabel3.grid(row=3,column=2,padx=5)
+
+estarHandicapMultsb0 = ttk.Spinbox(estarHandicapFrame, width=15, from_="-inf", to="inf", increment=0.1, state="disable")
+estarHandicapMultsb0.grid(row=0,column=3)
+estarHandicapMultsb1 = ttk.Spinbox(estarHandicapFrame, width=15, from_="-inf", to="inf", increment=0.1, state="disable")
+estarHandicapMultsb1.grid(row=1,column=3)
+estarHandicapMultsb2 = ttk.Spinbox(estarHandicapFrame, width=15, from_="-inf", to="inf", increment=0.1, state="disable")
+estarHandicapMultsb2.grid(row=2,column=3)
+estarHandicapMultsb3 = ttk.Spinbox(estarHandicapFrame, width=15, from_="-inf", to="inf", increment=0.1, state="disable")
+estarHandicapMultsb3.grid(row=3,column=3)
+
+estarHandicapDisplay()
+
+estarHandicapActionFrame = tk.Frame(estarHandicapFrame)
+estarHandicapActionFrame.grid(row=0, column=4, rowspan=4,padx=5)
+estarHandicapChange = tk.Button(estarHandicapActionFrame, text="Change Handicaps", command=changeHandicap)
+estarHandicapChange.pack()
+estarHandicapReset = tk.Button(estarHandicapActionFrame, text="Reset Selected Handicaps", command=resetHandicap)
+estarHandicapReset.pack(pady=(5,0))
+estarHandicapResetA = tk.Button(estarHandicapActionFrame, text="Reset All Handicaps", command=resetHandicapA)
+estarHandicapResetA.pack()
+
+#Star Boosts
+
+bstarTableFrame = tk.Frame(starBoostFrame)
+bstarTableFrame.grid(row=0,column=0,columnspan=4,rowspan=17)
+
+bstarStatLabel = tk.Label(bstarTableFrame, text = "Stat :")
+bstarStatLabel.grid(row=0,column=0,sticky=tk.EW)
+bstarCheck0 = tk.Checkbutton(bstarTableFrame, text=starBoostStatsList[0], anchor=tk.W, command=partial(bstarCheckButton,"0"))
+bstarCheck0.grid(row=1,column=0,sticky=tk.EW)
+bstarCheck1 = tk.Checkbutton(bstarTableFrame, text=starBoostStatsList[1], anchor=tk.W, command=partial(bstarCheckButton,"1"))
+bstarCheck1.grid(row=2,column=0,sticky=tk.EW)
+bstarCheck2 = tk.Checkbutton(bstarTableFrame, text=starBoostStatsList[2], anchor=tk.W, command=partial(bstarCheckButton,"2"))
+bstarCheck2.grid(row=3,column=0,sticky=tk.EW)
+bstarCheck3 = tk.Checkbutton(bstarTableFrame, text=starBoostStatsList[3], anchor=tk.W, command=partial(bstarCheckButton,"3"))
+bstarCheck3.grid(row=4,column=0,sticky=tk.EW)
+bstarCheck4 = tk.Checkbutton(bstarTableFrame, text=starBoostStatsList[4], anchor=tk.W, command=partial(bstarCheckButton,"4"))
+bstarCheck4.grid(row=5,column=0,sticky=tk.EW)
+bstarCheck5 = tk.Checkbutton(bstarTableFrame, text=starBoostStatsList[5], anchor=tk.W, command=partial(bstarCheckButton,"5"))
+bstarCheck5.grid(row=6,column=0,sticky=tk.EW)
+bstarCheck6 = tk.Checkbutton(bstarTableFrame, text=starBoostStatsList[6], anchor=tk.W, command=partial(bstarCheckButton,"6"))
+bstarCheck6.grid(row=7,column=0,sticky=tk.EW)
+bstarCheck7 = tk.Checkbutton(bstarTableFrame, text=starBoostStatsList[7], anchor=tk.W, command=partial(bstarCheckButton,"7"))
+bstarCheck7.grid(row=8,column=0,sticky=tk.EW)
+bstarCheck8 = tk.Checkbutton(bstarTableFrame, text=starBoostStatsList[8], anchor=tk.W, command=partial(bstarCheckButton,"8"))
+bstarCheck8.grid(row=9,column=0,sticky=tk.EW)
+bstarCheck9 = tk.Checkbutton(bstarTableFrame, text=starBoostStatsList[9], anchor=tk.W, command=partial(bstarCheckButton,"9"))
+bstarCheck9.grid(row=10,column=0,sticky=tk.EW)
+bstarCheck10 = tk.Checkbutton(bstarTableFrame, text=starBoostStatsList[10], anchor=tk.W, command=partial(bstarCheckButton,"10"))
+bstarCheck10.grid(row=11,column=0,sticky=tk.EW)
+bstarCheck11 = tk.Checkbutton(bstarTableFrame, text=starBoostStatsList[11], anchor=tk.W, command=partial(bstarCheckButton,"11"))
+bstarCheck11.grid(row=12,column=0,sticky=tk.EW)
+bstarCheck12 = tk.Checkbutton(bstarTableFrame, text=starBoostStatsList[12], anchor=tk.W, command=partial(bstarCheckButton,"12"))
+bstarCheck12.grid(row=13,column=0,sticky=tk.EW)
+bstarCheck13 = tk.Checkbutton(bstarTableFrame, text=starBoostStatsList[13], anchor=tk.W, command=partial(bstarCheckButton,"13"))
+bstarCheck13.grid(row=14,column=0,sticky=tk.EW)
+bstarCheck14 = tk.Checkbutton(bstarTableFrame, text=starBoostStatsList[14], anchor=tk.W, command=partial(bstarCheckButton,"14"))
+bstarCheck14.grid(row=15,column=0,sticky=tk.EW)
+bstarCheck15 = tk.Checkbutton(bstarTableFrame, text=starBoostStatsList[15], anchor=tk.W, command=partial(bstarCheckButton,"15"))
+bstarCheck15.grid(row=16,column=0,sticky=tk.EW)
+
+bstarOpLabel = tk.Label(bstarTableFrame, text = "Add/Mult :")
+bstarOpLabel.grid(row=0,column=1,padx=3)
+bstarOpcb0 = ttk.Combobox(bstarTableFrame, width=5, values=["Add","Mult"], state="disable")
+bstarOpcb0.grid(row=1,column=1,padx=3)
+bstarOpcb0.bind('<<ComboboxSelected>>', partial(bstarChangeOp, name="0"))
+bstarOpcb1 = ttk.Combobox(bstarTableFrame, width=5, values=["Add","Mult"], state="disable")
+bstarOpcb1.grid(row=2,column=1,padx=3)
+bstarOpcb1.bind('<<ComboboxSelected>>', partial(bstarChangeOp,name="1"))
+bstarOpcb2 = ttk.Combobox(bstarTableFrame, width=5, values=["Add","Mult"], state="disable")
+bstarOpcb2.grid(row=3,column=1,padx=3)
+bstarOpcb2.bind('<<ComboboxSelected>>', partial(bstarChangeOp,name="2"))
+bstarOpcb3 = ttk.Combobox(bstarTableFrame, width=5, values=["Add","Mult"], state="disable")
+bstarOpcb3.grid(row=4,column=1,padx=3)
+bstarOpcb3.bind('<<ComboboxSelected>>', partial(bstarChangeOp,name="3"))
+bstarOpcb4 = ttk.Combobox(bstarTableFrame, width=5, values=["Add","Mult"], state="disable")
+bstarOpcb4.grid(row=5,column=1,padx=3)
+bstarOpcb4.bind('<<ComboboxSelected>>', partial(bstarChangeOp,name="4"))
+bstarOpcb5 = ttk.Combobox(bstarTableFrame, width=5, values=["Add","Mult"], state="disable")
+bstarOpcb5.grid(row=6,column=1,padx=3)
+bstarOpcb5.bind('<<ComboboxSelected>>', partial(bstarChangeOp,name="5"))
+bstarOpcb6 = ttk.Combobox(bstarTableFrame, width=5, values=["Add","Mult"], state="disable")
+bstarOpcb6.grid(row=7,column=1,padx=3)
+bstarOpcb6.bind('<<ComboboxSelected>>', partial(bstarChangeOp,name="6"))
+bstarOpcb7 = ttk.Combobox(bstarTableFrame, width=5, values=["Add","Mult"], state="disable")
+bstarOpcb7.grid(row=8,column=1,padx=3)
+bstarOpcb7.bind('<<ComboboxSelected>>', partial(bstarChangeOp,name="7"))
+bstarOpcb8 = ttk.Combobox(bstarTableFrame, width=5, values=["Add","Mult"], state="disable")
+bstarOpcb8.grid(row=9,column=1,padx=3)
+bstarOpcb8.bind('<<ComboboxSelected>>', partial(bstarChangeOp,name="8"))
+bstarOpcb9 = ttk.Combobox(bstarTableFrame, width=5, values=["Add","Mult"], state="disable")
+bstarOpcb9.grid(row=10,column=1,padx=3)
+bstarOpcb9.bind('<<ComboboxSelected>>', partial(bstarChangeOp,name="9"))
+bstarOpcb10 = ttk.Combobox(bstarTableFrame, width=5, values=["Add","Mult"], state="disable")
+bstarOpcb10.grid(row=11,column=1,padx=3)
+bstarOpcb10.bind('<<ComboboxSelected>>', partial(bstarChangeOp,name="10"))
+bstarOpcb11 = ttk.Combobox(bstarTableFrame, width=5, values=["Add","Mult"], state="disable")
+bstarOpcb11.grid(row=12,column=1,padx=3)
+bstarOpcb11.bind('<<ComboboxSelected>>', partial(bstarChangeOp,name="11"))
+bstarOpcb12 = ttk.Combobox(bstarTableFrame, width=5, values=["Add","Mult"], state="disable")
+bstarOpcb12.grid(row=13,column=1,padx=3)
+bstarOpcb12.bind('<<ComboboxSelected>>', partial(bstarChangeOp,name="12"))
+bstarOpcb13 = ttk.Combobox(bstarTableFrame, width=5, values=["Add","Mult"], state="disable")
+bstarOpcb13.grid(row=14,column=1,padx=3)
+bstarOpcb13.bind('<<ComboboxSelected>>', partial(bstarChangeOp,name="13"))
+bstarOpcb14 = ttk.Combobox(bstarTableFrame, width=5, values=["Add","Mult"], state="disable")
+bstarOpcb14.grid(row=15,column=1,padx=3)
+bstarOpcb14.bind('<<ComboboxSelected>>', partial(bstarChangeOp,name="14"))
+bstarOpcb15 = ttk.Combobox(bstarTableFrame, width=5, values=["Add","Mult"], state="disable")
+bstarOpcb15.grid(row=16,column=1,padx=3)
+bstarOpcb15.bind('<<ComboboxSelected>>', partial(bstarChangeOp,name="15"))
+
+bstarValueLabel = tk.Label(bstarTableFrame, text = "Boost :")
+bstarValueLabel.grid(row=0,column=2,padx=3)
+bstarValuesb0 = ttk.Spinbox(bstarTableFrame, width=13, from_="-inf", to="inf", increment=1, state="disable")
+bstarValuesb0.grid(row=1,column=2,padx=3)
+bstarValuesb1 = ttk.Spinbox(bstarTableFrame, width=13, from_=0, to="inf", increment=0.1, state="disable")
+bstarValuesb1.grid(row=2,column=2,padx=3)
+bstarValuesb2 = ttk.Spinbox(bstarTableFrame, width=13, from_=0, to="inf", increment=0.1, state="disable")
+bstarValuesb2.grid(row=3,column=2,padx=3)
+bstarValuesb3 = ttk.Spinbox(bstarTableFrame, width=13, from_=0, to="inf", increment=0.1, state="disable")
+bstarValuesb3.grid(row=4,column=2,padx=3)
+bstarValuesb4 = ttk.Spinbox(bstarTableFrame, width=13, from_=0, to="inf", increment=0.1, state="disable")
+bstarValuesb4.grid(row=5,column=2,padx=3)
+bstarValuesb5 = ttk.Spinbox(bstarTableFrame, width=13, from_="-inf", to="inf", increment=1, state="disable")
+bstarValuesb5.grid(row=6,column=2,padx=3)
+bstarValuesb6 = ttk.Spinbox(bstarTableFrame, width=13, from_=0, to="inf", increment=0.1, state="disable")
+bstarValuesb6.grid(row=7,column=2,padx=3)
+bstarValuesb7 = ttk.Spinbox(bstarTableFrame, width=13, from_=0, to="inf", increment=0.1, state="disable")
+bstarValuesb7.grid(row=8,column=2,padx=3)
+bstarValuesb8 = ttk.Spinbox(bstarTableFrame, width=13, from_=0, to="inf", increment=0.1, state="disable")
+bstarValuesb8.grid(row=9,column=2,padx=3)
+bstarValuesb9 = ttk.Spinbox(bstarTableFrame, width=13, from_=0, to="inf", increment=0.1, state="disable")
+bstarValuesb9.grid(row=10,column=2,padx=3)
+bstarValuesb10 = ttk.Spinbox(bstarTableFrame, width=13, from_=0, to="inf", increment=0.1, state="disable")
+bstarValuesb10.grid(row=11,column=2,padx=3)
+bstarValuesb11 = ttk.Spinbox(bstarTableFrame, width=13, from_="-inf", to="inf", increment=1, state="disable")
+bstarValuesb11.grid(row=12,column=2,padx=3)
+bstarValuesb12 = ttk.Spinbox(bstarTableFrame, width=13, from_="-inf", to="inf", increment=1, state="disable")
+bstarValuesb12.grid(row=13,column=2,padx=3)
+bstarValuesb13 = ttk.Spinbox(bstarTableFrame, width=13, from_=0, to="inf", increment=0.1, state="disable")
+bstarValuesb13.grid(row=14,column=2,padx=3)
+bstarValuesb14 = ttk.Spinbox(bstarTableFrame, width=13, from_=0, to="inf", increment=0.1, state="disable")
+bstarValuesb14.grid(row=15,column=2,padx=3)
+bstarValuesb15 = ttk.Spinbox(bstarTableFrame, width=13, from_=0, to="inf", increment=0.1, state="disable")
+bstarValuesb15.grid(row=16,column=2,padx=3)
+
+bstarMinLabel = tk.Label(bstarTableFrame, text = "Min :")
+bstarMinLabel.grid(row=0,column=3,padx=3)
+bstarMinsb0 = ttk.Spinbox(bstarTableFrame, width=13, from_=0, to=65535, increment=1, state="disable")
+bstarMinsb0.grid(row=1,column=3,padx=3)
+bstarMinsb1 = ttk.Spinbox(bstarTableFrame, width=13, from_=0, to=65535, increment=1, state="disable")
+bstarMinsb1.grid(row=2,column=3,padx=3)
+bstarMinsb2 = ttk.Spinbox(bstarTableFrame, width=13, from_=0, to=65535, increment=1, state="disable")
+bstarMinsb2.grid(row=3,column=3,padx=3)
+bstarMinsb3 = ttk.Spinbox(bstarTableFrame, width=13, from_=0, to=65535, increment=1, state="disable")
+bstarMinsb3.grid(row=4,column=3,padx=3)
+bstarMinsb4 = ttk.Spinbox(bstarTableFrame, width=13, from_=0, to=65535, increment=1, state="disable")
+bstarMinsb4.grid(row=5,column=3,padx=3)
+bstarMinsb5 = ttk.Spinbox(bstarTableFrame, width=13, from_=0, to=65535, increment=1, state="disable")
+bstarMinsb5.grid(row=6,column=3,padx=3)
+bstarMinsb6 = ttk.Spinbox(bstarTableFrame, width=13, from_=0, to=65535, increment=1, state="disable")
+bstarMinsb6.grid(row=7,column=3,padx=3)
+bstarMinsb7 = ttk.Spinbox(bstarTableFrame, width=13, from_=0, to=65535, increment=1, state="disable")
+bstarMinsb7.grid(row=8,column=3,padx=3)
+bstarMinsb8 = ttk.Spinbox(bstarTableFrame, width=13, from_=0, to=65535, increment=1, state="disable")
+bstarMinsb8.grid(row=9,column=3,padx=3)
+bstarMinsb9 = ttk.Spinbox(bstarTableFrame, width=13, from_=0, to=65535, increment=1, state="disable")
+bstarMinsb9.grid(row=10,column=3,padx=3)
+bstarMinsb10 = ttk.Spinbox(bstarTableFrame, width=13, from_=0, to=65535, increment=1, state="disable")
+bstarMinsb10.grid(row=11,column=3,padx=3)
+bstarMinsb11 = ttk.Spinbox(bstarTableFrame, width=13, from_=0, to=65535, increment=1, state="disable")
+bstarMinsb11.grid(row=12,column=3,padx=3)
+bstarMinsb12 = ttk.Spinbox(bstarTableFrame, width=13, from_=0, to=65535, increment=1, state="disable")
+bstarMinsb12.grid(row=13,column=3,padx=3)
+bstarMinsb13 = ttk.Spinbox(bstarTableFrame, width=13, from_=0, to=65535, increment=1, state="disable")
+bstarMinsb13.grid(row=14,column=3,padx=3)
+bstarMinsb14 = ttk.Spinbox(bstarTableFrame, width=13, from_=0, to=65535, increment=1, state="disable")
+bstarMinsb14.grid(row=15,column=3,padx=3)
+bstarMinsb15 = ttk.Spinbox(bstarTableFrame, width=13, from_=0, to=65535, increment=1, state="disable")
+bstarMinsb15.grid(row=16,column=3,padx=3)
+
+bstarMaxLabel = tk.Label(bstarTableFrame, text = "Max :")
+bstarMaxLabel.grid(row=0,column=4,padx=3)
+bstarMaxsb0 = ttk.Spinbox(bstarTableFrame, width=13, from_=0, to=65535, increment=1, state="disable")
+bstarMaxsb0.grid(row=1,column=4,padx=3)
+bstarMaxsb1 = ttk.Spinbox(bstarTableFrame, width=13, from_=0, to=65535, increment=1, state="disable")
+bstarMaxsb1.grid(row=2,column=4,padx=3)
+bstarMaxsb2 = ttk.Spinbox(bstarTableFrame, width=13, from_=0, to=65535, increment=1, state="disable")
+bstarMaxsb2.grid(row=3,column=4,padx=3)
+bstarMaxsb3 = ttk.Spinbox(bstarTableFrame, width=13, from_=0, to=65535, increment=1, state="disable")
+bstarMaxsb3.grid(row=4,column=4,padx=3)
+bstarMaxsb4 = ttk.Spinbox(bstarTableFrame, width=13, from_=0, to=65535, increment=1, state="disable")
+bstarMaxsb4.grid(row=5,column=4,padx=3)
+bstarMaxsb5 = ttk.Spinbox(bstarTableFrame, width=13, from_=0, to=65535, increment=1, state="disable")
+bstarMaxsb5.grid(row=6,column=4,padx=3)
+bstarMaxsb6 = ttk.Spinbox(bstarTableFrame, width=13, from_=0, to=65535, increment=1, state="disable")
+bstarMaxsb6.grid(row=7,column=4,padx=3)
+bstarMaxsb7 = ttk.Spinbox(bstarTableFrame, width=13, from_=0, to=65535, increment=1, state="disable")
+bstarMaxsb7.grid(row=8,column=4,padx=3)
+bstarMaxsb8 = ttk.Spinbox(bstarTableFrame, width=13, from_=0, to=65535, increment=1, state="disable")
+bstarMaxsb8.grid(row=9,column=4,padx=3)
+bstarMaxsb9 = ttk.Spinbox(bstarTableFrame, width=13, from_=0, to=65535, increment=1, state="disable")
+bstarMaxsb9.grid(row=10,column=4,padx=3)
+bstarMaxsb10 = ttk.Spinbox(bstarTableFrame, width=13, from_=0, to=65535, increment=1, state="disable")
+bstarMaxsb10.grid(row=11,column=4,padx=3)
+bstarMaxsb11 = ttk.Spinbox(bstarTableFrame, width=13, from_=0, to=65535, increment=1, state="disable")
+bstarMaxsb11.grid(row=12,column=4,padx=3)
+bstarMaxsb12 = ttk.Spinbox(bstarTableFrame, width=13, from_=0, to=65535, increment=1, state="disable")
+bstarMaxsb12.grid(row=13,column=4,padx=3)
+bstarMaxsb13 = ttk.Spinbox(bstarTableFrame, width=13, from_=0, to=65535, increment=1, state="disable")
+bstarMaxsb13.grid(row=14,column=4,padx=3)
+bstarMaxsb14 = ttk.Spinbox(bstarTableFrame, width=13, from_=0, to=65535, increment=1, state="disable")
+bstarMaxsb14.grid(row=15,column=4,padx=3)
+bstarMaxsb15 = ttk.Spinbox(bstarTableFrame, width=13, from_=0, to=65535, increment=1, state="disable")
+bstarMaxsb15.grid(row=16,column=4,padx=3)
+
+starBoostDisplay()
+
+bstarWarning = tk.Label(starBoostFrame, text="Warning : Modifying maxes may lead to unintended consequences", fg="Red")
+bstarWarning.grid(row=17, column=3)
+
+bstarActionFrame = tk.LabelFrame(starBoostFrame, text="Actions")
+bstarActionFrame.grid(row=0, column=5, rowspan=4,padx=5)
+bstarChange = tk.Button(bstarActionFrame, text="Change Star Boosts", command=changeStarBoost)
+bstarChange.pack(pady=5)
+bstarReset = tk.Button(bstarActionFrame, text="Reset Selected Star Boosts", command=resetStarBoost)
+bstarReset.pack(pady=(5,0))
+bstarResetA = tk.Button(bstarActionFrame, text="Reset All Star Boosts", command=resetStarBoostA)
+bstarResetA.pack(pady=(0,5))
+
 '''
 TODO IDEAS :
 All chem special code
+Gay miis special code
+Add precharge to random
 '''
 
 #Credits
@@ -3642,9 +5929,9 @@ credits1 = tk.Label(creditsFrame, text="Thanks to :", font=('Arial',15))
 credits1.pack(pady=10)
 credits2 = tk.Label(creditsFrame, text="LlamaTrauma, for all their work and amazing website this program is based on", font=('Arial',15))
 credits2.pack(pady=10)
-credits3 = tk.Label(creditsFrame, text="lonelyVoxel, for their work on firebro which inspired me to do this", font=('Arial',12))
+credits3 = tk.Label(creditsFrame, text="The Fun Guy, for their many, many discoveries diving into the code", font=('Arial',15))
 credits3.pack(pady=10)
-credits4 = tk.Label(creditsFrame, text="Fun Guy, for their many discoveries diving into the code", font=('Arial',12))
+credits4 = tk.Label(creditsFrame, text="lonelyVoxel, for their work on firebro which inspired me to do this", font=('Arial',12))
 credits4.pack(pady=10)
 credits5 = tk.Label(creditsFrame, text="harrhy, for all their help with the github and the executable", font=('Arial',12))
 credits5.pack(pady=10)
@@ -3654,7 +5941,6 @@ credits7 = tk.Label(creditsFrame, text="Becket, for their gathering of knowledge
 credits7.pack(pady=10)
 credits8 = tk.Label(creditsFrame, text="Everyone else I'm forgetting :)")
 credits8.pack(pady=10)
-
 
 
 root.title("Sluggers stats editor v3")

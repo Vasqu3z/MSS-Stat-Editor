@@ -11,6 +11,8 @@ Added in version 3.3 : added the chem graph random function, which is a differen
 Added in version 3.4 : added a gecko code loader, that reads chem and stats changes from a gecko code directly
 Added in version 3.5 : fix to the gecko loader, executable now available !
 
+Added in version 4.0 : added change up, pitching wind up, hitboxes, real speeds, star gains and star boosts
+
 
 Either run the sluggers-stat-editor.exe, or you can find the source code in the "Source Code" folder
 
@@ -20,15 +22,19 @@ For the randomizer, adjust ratios, select options, then press "Randomize each ch
 Alternatively, choose the average amount of bad and good chem, as well as the max deviation from those average
 then press "Create Random Graph"
 
-Stat Editor tab:
+Stats Editor tab:
 Chose a character/group, check the stats to change, select a value, then choose your action
 
-Stat Randomizer tab:
+Stats Randomizer tab:
 Check stats to change, choose min and max values, as well as range if you select "modify around stats"
 Add the characters/groups you want to randomize one by one, select options, then press the big red button
 Note : Updated displayed stats depend on the min and max for the relevant stat, may lead to weirdness
 
-Traj Height tab:
+Advanced stats tab:
+Each sub-tab works like the Stats Editor tab. 
+For Hitboxes, click on the "Final Value :" button to calculate the real catch range and hitboxes (value*size scaling*0.001)
+
+Traj Heights Editor tab:
 Choose a trajectory group to edit, rename it if you want
 If you wish to add a new group, don't forget to check "use traj group"
 
@@ -39,7 +45,7 @@ You can save and load the changes made, stored in a .txt file in the "Save Files
 You can also load changes made from a gecko code directly, simply put the gecko code in a .txt file in the "Gecko Codes" folder,
 enter the file name and press "Load gecko code". Note that it can only read gecko commands starting with 00,02,04,06 or 08.
 
-Wacky stuff tab:
+Wacky Stuff tab:
 Dev mode allows you to input any number in the double-byte stats.
 Reverse buttons reverses the stats according to the current stats (so it will also reverse any change you made).
 For reverse stats, it will reverse around the midpoint between the max and min of that stat in vanilla, big outliers excluded)
