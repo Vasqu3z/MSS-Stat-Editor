@@ -1,11 +1,26 @@
 import tkinter as tk
 from tkinter import ttk
+from tkinter import filedialog
+import tkinter.messagebox as messagebox
 from random import random,randint,normalvariate,choice
 from functools import partial
 import re
-from inspect import getsourcefile
-from os.path import abspath
+import os
 import struct
+import json
+
+clipboard_cache = ""
+SAVE_ROOT_DIR = "saves"
+STATS_PRESET_DIR = os.path.join(SAVE_ROOT_DIR, "stats_presets")
+SELECTION_PRESET_DIR = os.path.join(SAVE_ROOT_DIR, "selection_presets")
+GECKO_CODE_DIR = os.path.join(SAVE_ROOT_DIR, "gecko_codes")
+TEAM_JSON_DIR = os.path.join(SAVE_ROOT_DIR, "team_json")
+
+
+def log_recap(message):
+    recapList.configure(state="normal")
+    recapList.insert(tk.END, message + "\n")
+    recapList.configure(state="disabled")
 
 
 #Big Lists
@@ -2937,22 +2952,36 @@ def geckoPartExclude():
         geckoWarning.configure(text="")
         
 def geckoCopy():
-    root.clipboard_clear()
-    root.clipboard_append(geckoDisplay.get("1.0", tk.END).strip())
-    root.update()
-
-def loadChangesV3():
-    message=""
-    name=geckoFile.get()
-    if not name.isalnum():
-        if name=="":
-            message=message+"No file name\n"
-            return(message)
-        message=message+"File name can't contain spaces or special characters\n"
-        return(message)
-    path=abspath(getsourcefile(lambda:0)).rsplit("\\",2)[0]
+    global clipboard_cache
+    text = geckoDisplay.get("1.0", tk.END).strip()
     try:
-        with open(path+"\\Save Files\\"+name+".txt","r") as file:
+        root.clipboard_clear()
+        root.clipboard_append(text)
+        root.update()
+        root.update_idletasks()
+        root.after(100, lambda: root.update_idletasks())
+        clipboard_cache = text
+    except tk.TclError:
+        clipboard_cache = ""
+        messagebox.showerror("Clipboard Error", "Unable to copy the Gecko code to the clipboard.")
+
+
+def on_close():
+    if clipboard_cache:
+        try:
+            root.clipboard_clear()
+            root.clipboard_append(clipboard_cache)
+            root.update()
+        except tk.TclError:
+            pass
+    root.withdraw()
+    root.after(200, root.destroy)
+
+
+def loadChangesV3(path):
+    message=""
+    try:
+        with open(path,"r", encoding="utf-8") as file:
             chem=""
             stat=""
             traj=""
@@ -3007,26 +3036,17 @@ def loadChangesV3():
             changedTrajListUsed()
             trajDisplay(1)
             chemColor()
-            recapList.configure(state="normal")
-            recapList.insert(tk.END,"Data loaded\n")
-            recapList.configure(state="disabled")
+            log_recap("Data loaded")
             return(message)
     except FileNotFoundError:
         message=message+"File not found\n"
         return(message)
 
-def loadChangesV4():
+
+def loadChangesV4(path):
     message=""
-    name=geckoFile.get()
-    if not name.isalnum():
-        if name=="":
-            message=message+"No file name\n"
-            return(message)
-        message=message+"File name can't contain spaces or special characters\n"
-        return(message)
-    path=abspath(getsourcefile(lambda:0)).rsplit("\\",2)[0]
     try:
-        with open(path+"\\Save Files\\"+name+".txt","r") as file:
+        with open(path,"r", encoding="utf-8") as file:
             chem=""
             stat=""
             traj=""
@@ -3142,23 +3162,23 @@ def loadChangesV4():
                 if i<43:
                     sp=speeds[i].split(",")
                     for j in range(2):
-                        changedSpeed[i][j]=int(sp[j])
+                        changedSpeed[i][j]=float(sp[j])
                 if i<12:
                     st=starsTeams[i].split(",")
                     for j in range(41):
-                        changedSpeed[i][j]=int(st[j])
+                        changedStarsTeam[i][j]=float(st[j])
                 if i<16:
                     sb=starBoosts[i].split(",")
                     for j in range(4):
-                        changedSpeed[i][j]=int(sb[j])
+                        changedStarBoost[i][j]=float(sb[j])
                 if i<4:
                     sh=starHandicaps[i].split(",")
                     for j in range(2):
-                        changedSpeed[i][j]=int(sh[j])
+                        changedStarHandicap[i][j]=float(sh[j])
                 if i<2:
                     h=handicapParamss[i].split(",")
                     for j in range(3):
-                        changedSpeed[i][j]=int(h[j])
+                        changedHandicapParams[i][j]=float(h[j])
             changedTrajListUsed()
             trajDisplay(1)
             starBoostDisplay()
@@ -3167,42 +3187,53 @@ def loadChangesV4():
             speedDisplay()
             hitboxDisplay(1)
             chemColor()
-            recapList.configure(state="normal")
-            recapList.insert(tk.END,"Data loaded\n")
-            recapList.configure(state="disabled")
+            log_recap("Data loaded")
             return(message)
     except FileNotFoundError:
         message=message+"File not found\n"
         return(message)
 
+
 def loadChanges():
-    message=loadChangesV4()
+    os.makedirs(STATS_PRESET_DIR, exist_ok=True)
+    path = filedialog.askopenfilename(
+        initialdir=os.path.abspath(STATS_PRESET_DIR),
+        title="Load Stats Preset",
+        filetypes=[("Text Presets", "*.txt"), ("All Files", "*.*")]
+    )
+    if not path:
+        log_recap("Load operation cancelled.")
+        return
+
+    message=loadChangesV4(path)
     if message!="":
-        message2=loadChangesV3()
+        message2=loadChangesV3(path)
         if message2!="":
-            recapList.configure(state="normal")
-            recapList.insert(tk.END,message)
-            recapList.configure(state="disabled")
-    return
+            reasons = []
+            for error_message in [message, message2]:
+                for line in error_message.splitlines():
+                    clean_line = line.strip()
+                    if clean_line and clean_line not in reasons:
+                        reasons.append(clean_line)
+            concise_reasons = "\n".join(reasons) if reasons else "Unknown parsing error"
+            messagebox.showerror("Load Error", "Unable to load stats preset.\n\nReason(s):\n" + concise_reasons)
+            log_recap("Load failed: " + "; ".join(reasons))
+
 
 def saveChanges():
-    recapList.configure(state="normal")
-    name=geckoFile.get()
-    if not name.isalnum():
-        if name=="":
-            recapList.insert(tk.END,"No file name\n")
-            recapList.configure(state="disabled")
-            return
-        recapList.insert(tk.END,"File name can't contain spaces or special characters\n")
-        recapList.configure(state="disabled")
+    os.makedirs(STATS_PRESET_DIR, exist_ok=True)
+    path = filedialog.asksaveasfilename(
+        initialdir=os.path.abspath(STATS_PRESET_DIR),
+        title="Save Stats Preset",
+        defaultextension=".txt",
+        filetypes=[("Text Presets", "*.txt"), ("All Files", "*.*")]
+    )
+    if not path:
+        log_recap("Save operation cancelled.")
         return
-    if geckoSecurityVar.get()==1:
-        mode="w"
-    else:
-        mode="x"
-    path=abspath(getsourcefile(lambda:0)).rsplit("\\",2)[0]
+
     try:
-        with open(path+"\\Save Files\\"+name+".txt",mode) as file:
+        with open(path,"w", encoding="utf-8") as file:
             for i in range(101):
                 for j in range(100):
                     file.write(str(changedChem[i][j])+",")
@@ -3247,12 +3278,164 @@ def saveChanges():
                 for j in range(2):
                     file.write(str(changedHandicapParams[i][j])+",")
                 file.write(str(changedHandicapParams[i][2])+"\n")
-            recapList.insert(tk.END,"Data saved\n")
-            recapList.configure(state="disabled")
-    except FileExistsError:
-        recapList.insert(tk.END,"File already exists\n")
-        recapList.configure(state="disabled")
+        messagebox.showinfo("Save Successful", f"Stats preset saved to '{os.path.basename(path)}'")
+        log_recap("Data saved")
+    except OSError as exc:
+        messagebox.showerror("Save Error", f"An error occurred while saving data:\n{exc}")
+        log_recap(f"Error saving data: {exc}")
+
+
+def saveSelection():
+    os.makedirs(SELECTION_PRESET_DIR, exist_ok=True)
+    path = filedialog.asksaveasfilename(
+        initialdir=os.path.abspath(SELECTION_PRESET_DIR),
+        title="Save Character Selection",
+        defaultextension=".csv",
+        filetypes=[("Selection Presets", "*.csv"), ("All Files", "*.*")]
+    )
+    if not path:
+        log_recap("Save operation cancelled.")
         return
+
+    try:
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(",".join(map(str, geckoPlayerList)))
+        messagebox.showinfo("Save Successful", f"Selection saved to '{os.path.basename(path)}'")
+        log_recap(f"Selection saved to '{path}'")
+    except OSError as exc:
+        messagebox.showerror("Save Error", f"An error occurred while saving selection:\n{exc}")
+        log_recap(f"Error saving selection: {exc}")
+
+
+def loadSelection():
+    os.makedirs(SELECTION_PRESET_DIR, exist_ok=True)
+    path = filedialog.askopenfilename(
+        initialdir=os.path.abspath(SELECTION_PRESET_DIR),
+        title="Load Character Selection",
+        filetypes=[("Selection Presets", "*.csv"), ("All Files", "*.*")]
+    )
+    if not path:
+        log_recap("Load operation cancelled.")
+        return
+
+    lowered_path = path.lower()
+    if not lowered_path.endswith(".csv"):
+        if lowered_path.endswith(".txt"):
+            messagebox.showwarning("Wrong File Type", "This appears to be a Stats Preset file, not a Character Selection file.")
+        log_recap("Load failed: Invalid file type. Please select a .csv file.")
+        return
+
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            data = f.read().strip()
+
+        valid_selection = []
+        invalid_values = 0
+        if data:
+            for val in data.split(","):
+                token = val.strip()
+                if not token.isdigit():
+                    invalid_values += 1
+                    continue
+                index = int(token)
+                if 0 <= index < len(comboList) and getGroupSize(index) == 1:
+                    valid_selection.append(index)
+                else:
+                    invalid_values += 1
+
+        geckoPlayerList.clear()
+        geckoPlayerList.extend(sorted(set(valid_selection)))
+        refreshGeckoText()
+
+        if invalid_values > 0:
+            messagebox.showwarning("Load Warning", f"Selection loaded with {invalid_values} invalid entries ignored.")
+            log_recap(f"Selection loaded from '{path}' ({invalid_values} invalid entries ignored)")
+        else:
+            messagebox.showinfo("Load Successful", f"Selection loaded from '{os.path.basename(path)}'")
+            log_recap(f"Selection loaded from '{path}'")
+    except OSError as exc:
+        messagebox.showerror("Load Error", f"An error occurred while loading selection:\n{exc}")
+        log_recap(f"Error loading selection: {exc}")
+
+
+def loadTeamJsonSelection():
+    os.makedirs(TEAM_JSON_DIR, exist_ok=True)
+    paths = filedialog.askopenfilenames(
+        initialdir=os.path.abspath(TEAM_JSON_DIR),
+        title="Load Team JSON(s)",
+        filetypes=[("Team JSON", "*.json"), ("All Files", "*.*")]
+    )
+    if not paths:
+        log_recap("Load team JSON operation cancelled.")
+        return
+
+    selectable_index_by_name = {}
+    for index, name in enumerate(comboList):
+        if getGroupSize(index) == 1:
+            selectable_index_by_name[name.lstrip()] = index
+
+    added_indices = []
+    unknown_database_ids = []
+    invalid_files = []
+
+    for path in paths:
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                team_data = json.load(f)
+        except (OSError, json.JSONDecodeError) as exc:
+            invalid_files.append(f"{os.path.basename(path)} ({exc})")
+            continue
+
+        candidates = []
+        roster = team_data.get("roster", {})
+        if isinstance(roster, dict):
+            candidates.extend(roster.values())
+        for key in ["battingOrder", "bench"]:
+            section = team_data.get(key, [])
+            if isinstance(section, list):
+                candidates.extend(section)
+
+        for entry in candidates:
+            if not isinstance(entry, dict):
+                continue
+            database_id = entry.get("databaseId")
+            if not isinstance(database_id, str):
+                continue
+            player_index = selectable_index_by_name.get(database_id.strip())
+            if player_index is None:
+                unknown_database_ids.append(database_id.strip())
+            else:
+                added_indices.append(player_index)
+
+    if invalid_files:
+        messagebox.showwarning("Team JSON Load Warning", "Some files could not be read:\n- " + "\n- ".join(invalid_files))
+
+    combined = set(geckoPlayerList)
+    combined.update(added_indices)
+    geckoPlayerList.clear()
+    geckoPlayerList.extend(sorted(combined))
+    refreshGeckoText()
+
+    if len(added_indices) == 0:
+        messagebox.showwarning("Load Warning", "No valid players were found in the selected JSON file(s).")
+        log_recap("No valid players found in selected team JSON file(s).")
+        return
+
+    unique_unknown = sorted(set([name for name in unknown_database_ids if name]))
+    if unique_unknown:
+        preview = ", ".join(unique_unknown[:8])
+        suffix = " ..." if len(unique_unknown) > 8 else ""
+        messagebox.showwarning(
+            "Load Warning",
+            f"Loaded team JSON selection with {len(unique_unknown)} unknown databaseId value(s):\n{preview}{suffix}"
+        )
+
+    messagebox.showinfo(
+        "Load Successful",
+        f"Loaded {len(paths)} JSON file(s). Added {len(set(added_indices))} unique player(s) to selection."
+    )
+    log_recap(f"Loaded team JSON(s): {len(paths)} file(s), {len(set(added_indices))} unique player(s) added.")
+
 
 def refreshGeckoText():
     geckoPlayers.configure(state="normal")
@@ -3475,19 +3658,19 @@ def simpleCodeLoad(address,code):
 
 def loadCode():
     recapList.configure(state="normal")
-    #file reader
-    name=geckoCodeFile.get()
-    if not name.isalnum():
-        if name=="":
-            recapList.insert(tk.END,"No file name\n")
-            recapList.configure(state="disabled")
-            return
-        recapList.insert(tk.END,"File name can't contain spaces or special characters\n")
+    os.makedirs(GECKO_CODE_DIR, exist_ok=True)
+    path = filedialog.askopenfilename(
+        initialdir=os.path.abspath(GECKO_CODE_DIR),
+        title="Load Gecko Code",
+        filetypes=[("Gecko code", "*.txt"), ("All Files", "*.*")]
+    )
+    if not path:
+        recapList.insert(tk.END,"Load operation cancelled\n")
         recapList.configure(state="disabled")
         return
-    path=abspath(getsourcefile(lambda:0)).rsplit("\\",2)[0]
+
     try:
-        with open(path+"\\Gecko Codes\\"+name+".txt","r") as file:
+        with open(path,"r", encoding="utf-8") as file:
             code=[]
             for line in file:
                 l=line.rstrip("\n")
@@ -3500,7 +3683,7 @@ def loadCode():
         recapList.insert(tk.END,"File not found\n")
         recapList.configure(state="disabled")
         return
-    
+
     #code loader
     is06=0
     is08=0
@@ -4999,18 +5182,12 @@ geckoWarningFrame.grid(row=1, column=0, columnspan=4)
 geckoWarning = tk.Label(geckoWarningFrame, text="")
 geckoWarning.pack()
 
-geckoFileFrame = tk.LabelFrame(geckoFrame, text="Saved changes manager (file name can't contain spaces or special characters)")
+geckoFileFrame = tk.LabelFrame(geckoFrame, text="Saved changes manager")
 geckoFileFrame.grid(row=2, column=0, columnspan=4)
-geckoFile = tk.Entry(geckoFileFrame, width=80)
-geckoFile.pack(padx=5)
-geckoFile.insert("0","Save File Name")
-geckoLoad = tk.Button(geckoFileFrame, text="Load changes", width=10, command=loadChanges)
+geckoLoad = tk.Button(geckoFileFrame, text="Load changes", width=12, command=loadChanges)
 geckoLoad.pack(side=tk.LEFT, padx=5, pady=5)
-geckoSave = tk.Button(geckoFileFrame, text="Save changes", width=10, command=saveChanges)
+geckoSave = tk.Button(geckoFileFrame, text="Save changes", width=12, command=saveChanges)
 geckoSave.pack(side=tk.LEFT, padx=5)
-geckoSecurityVar = tk.IntVar()
-geckoSecurity = tk.Checkbutton(geckoFileFrame, text="Override savefile", variable=geckoSecurityVar)
-geckoSecurity.pack(side=tk.LEFT)
 
 geckoPlayersFrame = tk.LabelFrame(geckoFrame, text="Characters selection")
 geckoPlayersFrame.grid(row=3, column=0, columnspan=4)
@@ -5034,13 +5211,16 @@ geckoRemovePlayer = tk.Button(geckoPlayersFrame, text="Remove from selection", c
 geckoRemovePlayer.pack(side=tk.TOP, padx=5, pady=5)
 geckoClearSelection = tk.Button(geckoPlayersFrame, text="Clear selection", command=clearPlayersGecko)
 geckoClearSelection.pack(side=tk.TOP, padx=5, pady=5)
+geckoSaveSelection = tk.Button(geckoPlayersFrame, text="Save selection", command=saveSelection)
+geckoSaveSelection.pack(side=tk.TOP, padx=5, pady=(5,0))
+geckoLoadSelection = tk.Button(geckoPlayersFrame, text="Load selection", command=loadSelection)
+geckoLoadSelection.pack(side=tk.TOP, padx=5, pady=(5,5))
+geckoLoadTeamJson = tk.Button(geckoPlayersFrame, text="Load team JSON(s)", command=loadTeamJsonSelection)
+geckoLoadTeamJson.pack(side=tk.TOP, padx=5, pady=(0,5))
 
 geckoCodeLoaderFrame = tk.LabelFrame(geckoFrame, text="Gecko code loader")
 geckoCodeLoaderFrame.grid(row=4, column=0, columnspan=4)
-geckoCodeFile = tk.Entry(geckoCodeLoaderFrame, width=80)
-geckoCodeFile.pack(padx=5)
-geckoCodeFile.insert("0","Gecko Code File Name")
-geckoCodeLoad = tk.Button(geckoCodeLoaderFrame, text="Load gecko code", width=15, command=loadCode)
+geckoCodeLoad = tk.Button(geckoCodeLoaderFrame, text="Load gecko code", width=18, command=loadCode)
 geckoCodeLoad.pack(padx=5,pady=5)
 
 #Wacky Stuff
@@ -5949,4 +6129,5 @@ root.title("Sluggers stats editor v3")
 root.lift()
 root.attributes('-topmost', True)
 root.attributes('-topmost', False)
+root.protocol("WM_DELETE_WINDOW", on_close)
 root.mainloop()
