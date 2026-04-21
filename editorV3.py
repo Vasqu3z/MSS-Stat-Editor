@@ -14,7 +14,6 @@ SAVE_ROOT_DIR = "saves"
 STATS_PRESET_DIR = os.path.join(SAVE_ROOT_DIR, "stats_presets")
 SELECTION_PRESET_DIR = os.path.join(SAVE_ROOT_DIR, "selection_presets")
 GECKO_CODE_DIR = os.path.join(SAVE_ROOT_DIR, "gecko_codes")
-TEAM_JSON_DIR = os.path.join(SAVE_ROOT_DIR, "team_json")
 
 
 def log_recap(message):
@@ -3309,64 +3308,13 @@ def saveSelection():
 
 def loadSelection():
     os.makedirs(SELECTION_PRESET_DIR, exist_ok=True)
-    path = filedialog.askopenfilename(
-        initialdir=os.path.abspath(SELECTION_PRESET_DIR),
-        title="Load Character Selection",
-        filetypes=[("Selection Presets", "*.csv"), ("All Files", "*.*")]
-    )
-    if not path:
-        log_recap("Load operation cancelled.")
-        return
-
-    lowered_path = path.lower()
-    if not lowered_path.endswith(".csv"):
-        if lowered_path.endswith(".txt"):
-            messagebox.showwarning("Wrong File Type", "This appears to be a Stats Preset file, not a Character Selection file.")
-        log_recap("Load failed: Invalid file type. Please select a .csv file.")
-        return
-
-    try:
-        with open(path, "r", encoding="utf-8") as f:
-            data = f.read().strip()
-
-        valid_selection = []
-        invalid_values = 0
-        if data:
-            for val in data.split(","):
-                token = val.strip()
-                if not token.isdigit():
-                    invalid_values += 1
-                    continue
-                index = int(token)
-                if 0 <= index < len(comboList) and getGroupSize(index) == 1:
-                    valid_selection.append(index)
-                else:
-                    invalid_values += 1
-
-        geckoPlayerList.clear()
-        geckoPlayerList.extend(sorted(set(valid_selection)))
-        refreshGeckoText()
-
-        if invalid_values > 0:
-            messagebox.showwarning("Load Warning", f"Selection loaded with {invalid_values} invalid entries ignored.")
-            log_recap(f"Selection loaded from '{path}' ({invalid_values} invalid entries ignored)")
-        else:
-            messagebox.showinfo("Load Successful", f"Selection loaded from '{os.path.basename(path)}'")
-            log_recap(f"Selection loaded from '{path}'")
-    except OSError as exc:
-        messagebox.showerror("Load Error", f"An error occurred while loading selection:\n{exc}")
-        log_recap(f"Error loading selection: {exc}")
-
-
-def loadTeamJsonSelection():
-    os.makedirs(TEAM_JSON_DIR, exist_ok=True)
     paths = filedialog.askopenfilenames(
-        initialdir=os.path.abspath(TEAM_JSON_DIR),
-        title="Load Team JSON(s)",
-        filetypes=[("Team JSON", "*.json"), ("All Files", "*.*")]
+        initialdir=os.path.abspath(SELECTION_PRESET_DIR),
+        title="Load Character Selection / Team JSON",
+        filetypes=[("Selection/Team Files", "*.csv *.json"), ("Selection Presets", "*.csv"), ("Team JSON", "*.json"), ("All Files", "*.*")]
     )
     if not paths:
-        log_recap("Load team JSON operation cancelled.")
+        log_recap("Load operation cancelled.")
         return
 
     selectable_index_by_name = {}
@@ -3374,11 +3322,40 @@ def loadTeamJsonSelection():
         if getGroupSize(index) == 1:
             selectable_index_by_name[name.lstrip()] = index
 
-    added_indices = []
+    merged_selection = set(geckoPlayerList)
+    added_indices = set()
     unknown_database_ids = []
     invalid_files = []
+    invalid_values = 0
 
     for path in paths:
+        lowered_path = path.lower()
+        if lowered_path.endswith(".csv"):
+            try:
+                with open(path, "r", encoding="utf-8") as f:
+                    data = f.read().strip()
+            except OSError as exc:
+                invalid_files.append(f"{os.path.basename(path)} ({exc})")
+                continue
+
+            if data:
+                for val in data.split(","):
+                    token = val.strip()
+                    if not token.isdigit():
+                        invalid_values += 1
+                        continue
+                    index = int(token)
+                    if 0 <= index < len(comboList) and getGroupSize(index) == 1:
+                        merged_selection.add(index)
+                        added_indices.add(index)
+                    else:
+                        invalid_values += 1
+            continue
+
+        if not lowered_path.endswith(".json"):
+            invalid_files.append(f"{os.path.basename(path)} (unsupported file type)")
+            continue
+
         try:
             with open(path, "r", encoding="utf-8") as f:
                 team_data = json.load(f)
@@ -3405,20 +3382,19 @@ def loadTeamJsonSelection():
             if player_index is None:
                 unknown_database_ids.append(database_id.strip())
             else:
-                added_indices.append(player_index)
+                merged_selection.add(player_index)
+                added_indices.add(player_index)
 
     if invalid_files:
-        messagebox.showwarning("Team JSON Load Warning", "Some files could not be read:\n- " + "\n- ".join(invalid_files))
+        messagebox.showwarning("Load Warning", "Some files could not be read:\n- " + "\n- ".join(invalid_files))
 
-    combined = set(geckoPlayerList)
-    combined.update(added_indices)
     geckoPlayerList.clear()
-    geckoPlayerList.extend(sorted(combined))
+    geckoPlayerList.extend(sorted(merged_selection))
     refreshGeckoText()
 
     if len(added_indices) == 0:
-        messagebox.showwarning("Load Warning", "No valid players were found in the selected JSON file(s).")
-        log_recap("No valid players found in selected team JSON file(s).")
+        messagebox.showwarning("Load Warning", "No valid players were found in the selected file(s).")
+        log_recap("No valid players found in selected file(s).")
         return
 
     unique_unknown = sorted(set([name for name in unknown_database_ids if name]))
@@ -3429,12 +3405,19 @@ def loadTeamJsonSelection():
             "Load Warning",
             f"Loaded team JSON selection with {len(unique_unknown)} unknown databaseId value(s):\n{preview}{suffix}"
         )
+    elif invalid_values > 0:
+        messagebox.showwarning("Load Warning", f"Selection loaded with {invalid_values} invalid CSV entries ignored.")
 
     messagebox.showinfo(
         "Load Successful",
-        f"Loaded {len(paths)} JSON file(s). Added {len(set(added_indices))} unique player(s) to selection."
+        f"Loaded {len(paths)} file(s). Added {len(added_indices)} unique player(s) to selection."
     )
-    log_recap(f"Loaded team JSON(s): {len(paths)} file(s), {len(set(added_indices))} unique player(s) added.")
+    recap = f"Loaded selection from {len(paths)} file(s), {len(added_indices)} unique player(s) added."
+    if invalid_values > 0:
+        recap += f" Ignored {invalid_values} invalid CSV entries."
+    if len(unique_unknown) > 0:
+        recap += f" Unknown databaseId values: {len(unique_unknown)}."
+    log_recap(recap)
 
 
 def refreshGeckoText():
@@ -5215,8 +5198,6 @@ geckoSaveSelection = tk.Button(geckoPlayersFrame, text="Save selection", command
 geckoSaveSelection.pack(side=tk.TOP, padx=5, pady=(5,0))
 geckoLoadSelection = tk.Button(geckoPlayersFrame, text="Load selection", command=loadSelection)
 geckoLoadSelection.pack(side=tk.TOP, padx=5, pady=(5,5))
-geckoLoadTeamJson = tk.Button(geckoPlayersFrame, text="Load team JSON(s)", command=loadTeamJsonSelection)
-geckoLoadTeamJson.pack(side=tk.TOP, padx=5, pady=(0,5))
 
 geckoCodeLoaderFrame = tk.LabelFrame(geckoFrame, text="Gecko code loader")
 geckoCodeLoaderFrame.grid(row=4, column=0, columnspan=4)
