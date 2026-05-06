@@ -2808,12 +2808,12 @@ def geckoGenerate(listPlayers,exclude):
     for i in range(16):#star boost
         for j in range(2):
             stat=float2Hex(changedStarBoost[i][j])
-            default=float2Hex(changedStarBoost[i][j])
+            default=float2Hex(defaultStarBoost[i][j])
             for n in range(4):
                 Lv = advanceCount(stat[n*2:n*2+2], default[n*2:n*2+2], baseStarBoost+i*12+j*4+n, Lv.copy(),1)
         for j in range(2,4):
             stat=int2Hex(changedStarBoost[i][j])
-            default=int2Hex(changedStarBoost[i][j])
+            default=int2Hex(defaultStarBoost[i][j])
             for n in range(2):
                 Lv = advanceCount(stat[n*2:n*2+2], default[n*2:n*2+2], baseStarBoost+i*12+(j+2)*2+n, Lv.copy(),1)
     Lv = resetCount(6494612,Lv.copy())
@@ -3084,26 +3084,26 @@ def loadChangesV4():
             if not re.search("^([01],){5}[01]$",used):
                 message=message+"corrupted traj data\n"
                 error=1
-            if not re.search("^(([0-9.]+,){13}[0-9.]+;){100}([0-9.]+,){13}[0-9.]+$",size):
+            if not re.search("^((-?[0-9]*\.?[0-9]+,){13}-?[0-9]*\.?[0-9]+;){100}(-?[0-9]*\.?[0-9]+,){13}-?[0-9]*\.?[0-9]+$",size):
                 message=message+"corrupted size data\n"
                 error=1
-            if not re.search("^(([0-9.]+,){4}[0-9.]+;){100}([0-9.]+,){4}[0-9.]+$",pitch):
+            if not re.search("^(([0-9]*\.?[0-9]+,){3}-?[0-9]*\.?[0-9]+,[0-9]*\.?[0-9]+;){100}([0-9]*\.?[0-9]+,){3}-?[0-9]*\.?[0-9]+,[0-9]*\.?[0-9]+$",pitch):
                 message=message+"corrupted pitching data\n"
                 error=1
-            if not re.search("^(([0-9.]+,){1}[0-9.]+;){42}([0-9.]+,){1}[0-9.]+$",speed):
+            if not re.search("^([0-9]*\.?[0-9]+,[0-9]*\.?[0-9]+;){42}[0-9]*\.?[0-9]+,[0-9]*\.?[0-9]+$",speed):
                 message=message+"corrupted speed data\n"
                 error=1
-            if not re.search("^(([0-9.]+,){40}[0-9.]+;){11}([0-9.]+,){40}[0-9.]+$",starsTeam):
+            if not re.search("^((-?[0-9]+,){40}-?[0-9]+;){11}(-?[0-9]+,){40}-?[0-9]+$",starsTeam):
                 message=message+"corrupted team stars data\n"
                 error=1
-            if not re.search("^(([0-9.]+,){3}[0-9.]+;){15}([0-9.]+,){3}[0-9.]+$",starBoost):
-                message=message+"corrupted team stars boost\n"
+            if not re.search("^([12],-?[0-9]*\.?[0-9]+,[0-9]+,[0-9]+;){15}([12],-?[0-9]*\.?[0-9]+,[0-9]+,[0-9]+)$",starBoost):
+                message=message+"corrupted star boost\n"
                 error=1
-            if not re.search("^(([0-9.]+,){1}[0-9.]+;){3}([0-9.]+,){1}[0-9.]+$",starHandicap):
-                message=message+"corrupted team star handicap\n"
+            if not re.search("^(-?[0-9]+,-?[0-9]*\.?[0-9]+;){3}-?[0-9]+,-?[0-9]*\.?[0-9]+$",starHandicap):
+                message=message+"corrupted team stars handicap\n"
                 error=1
-            if not re.search("^(([0-9.]+,){2}[0-9.]+;){1}([0-9.]+,){2}[0-9.]+$",handicapParams):
-                message=message+"corrupted team handicap params\n"
+            if not re.search("^([0-9]+,){2}[0-9]+;([0-9]+,){2}[0-9]+$",handicapParams):
+                message=message+"corrupted team stars handicap params\n"
                 error=1
             if error==1:
                 return(message)
@@ -3129,9 +3129,15 @@ def loadChangesV4():
                 for j in range(30):
                     changedStat[i][j]=int(s[j])
                 for j in range(14):
-                    changedSize[i][j]=int(z[j])
+                    try:
+                        changedSize[i][j]=int(z[j])
+                    except ValueError:
+                        changedSize[i][j]=float(z[j])
                 for j in range(5):
-                    changedPitching[i][j]=int(p[j])
+                    try:
+                        changedPitching[i][j]=int(p[j])
+                    except ValueError:
+                        changedPitching[i][j]=float(p[j])
                 if i<24:
                     t=trajs[i].split(",")
                     for j in range(25):
@@ -3142,23 +3148,32 @@ def loadChangesV4():
                 if i<43:
                     sp=speeds[i].split(",")
                     for j in range(2):
-                        changedSpeed[i][j]=int(sp[j])
+                        try:
+                            changedSpeed[i][j]=int(sp[j])
+                        except ValueError:
+                            changedSpeed[i][j]=float(sp[j])
                 if i<12:
                     st=starsTeams[i].split(",")
                     for j in range(41):
-                        changedSpeed[i][j]=int(st[j])
+                        changedStarsTeam[i][j]=int(st[j])
                 if i<16:
                     sb=starBoosts[i].split(",")
                     for j in range(4):
-                        changedSpeed[i][j]=int(sb[j])
+                        try:
+                            changedStarBoost[i][j]=int(sb[j])
+                        except ValueError:
+                            changedStarBoost[i][j]=float(sb[j])
                 if i<4:
                     sh=starHandicaps[i].split(",")
                     for j in range(2):
-                        changedSpeed[i][j]=int(sh[j])
+                        try:
+                            changedStarHandicap[i][j]=int(sh[j])
+                        except ValueError:
+                            changedStarHandicap[i][j]=float(sh[j])
                 if i<2:
                     h=handicapParamss[i].split(",")
                     for j in range(3):
-                        changedSpeed[i][j]=int(h[j])
+                        changedHandicapParams[i][j]=int(h[j])
             changedTrajListUsed()
             trajDisplay(1)
             starBoostDisplay()
@@ -3179,9 +3194,12 @@ def loadChanges():
     message=loadChangesV4()
     if message!="":
         message2=loadChangesV3()
-        if message2!="":
+        recapList.configure(state="normal")
+        recapList.insert(tk.END,message)
+        recapList.configure(state="disabled")
+        if message2=="":
             recapList.configure(state="normal")
-            recapList.insert(tk.END,message)
+            recapList.insert(tk.END,message+"V3 data loaded (chem, stats and traj)")
             recapList.configure(state="disabled")
     return
 
@@ -3642,7 +3660,7 @@ def devMode():
         recapList.insert(tk.END, "Dev mode de-activated, edited stats may remain out of safe range\n")
         recapList.configure(state="disabled")
 
-
+        
 #Hitbox functions
 
 def hitboxCheckButton(name):
