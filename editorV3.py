@@ -2822,12 +2822,12 @@ def geckoGenerate(listPlayers,exclude):
     for i in range(16):#star boost
         for j in range(2):
             stat=float2Hex(changedStarBoost[i][j])
-            default=float2Hex(changedStarBoost[i][j])
+            default=float2Hex(defaultStarBoost[i][j])
             for n in range(4):
                 Lv = advanceCount(stat[n*2:n*2+2], default[n*2:n*2+2], baseStarBoost+i*12+j*4+n, Lv.copy(),1)
         for j in range(2,4):
             stat=int2Hex(changedStarBoost[i][j])
-            default=int2Hex(changedStarBoost[i][j])
+            default=int2Hex(defaultStarBoost[i][j])
             for n in range(2):
                 Lv = advanceCount(stat[n*2:n*2+2], default[n*2:n*2+2], baseStarBoost+i*12+(j+2)*2+n, Lv.copy(),1)
     Lv = resetCount(6494612,Lv.copy())
