@@ -2410,7 +2410,7 @@ def changeTrajName():
         return
     index=trajAllList.index(group)
     name=trajChangeName.get()
-    if not re.search("^[a-zA-Z\s0-9]+$", name):
+    if not re.search(r"^[a-zA-Z\s0-9]+$", name):
         recapList.insert(tk.END,"Name can only contain letters, numbers and spaces\n")
         recapList.configure(state="disabled")
         return
@@ -2822,12 +2822,12 @@ def geckoGenerate(listPlayers,exclude):
     for i in range(16):#star boost
         for j in range(2):
             stat=float2Hex(changedStarBoost[i][j])
-            default=float2Hex(changedStarBoost[i][j])
+            default=float2Hex(defaultStarBoost[i][j])
             for n in range(4):
                 Lv = advanceCount(stat[n*2:n*2+2], default[n*2:n*2+2], baseStarBoost+i*12+j*4+n, Lv.copy(),1)
         for j in range(2,4):
             stat=int2Hex(changedStarBoost[i][j])
-            default=int2Hex(changedStarBoost[i][j])
+            default=int2Hex(defaultStarBoost[i][j])
             for n in range(2):
                 Lv = advanceCount(stat[n*2:n*2+2], default[n*2:n*2+2], baseStarBoost+i*12+(j+2)*2+n, Lv.copy(),1)
     Lv = resetCount(6494612,Lv.copy())
@@ -3005,7 +3005,7 @@ def loadChangesV3(path):
             if not re.search("^(([0-9]+,){24}[0-9]+;){23}([0-9]+,){24}[0-9]+$",traj):
                 message=message+"corrupted traj data\n"
                 error=1
-            if not re.search("^([a-zA-Z0-9\s]+,){5}[a-zA-Z0-9\s]+$",name):
+            if not re.search(r"^([a-zA-Z0-9\s]+,){5}[a-zA-Z0-9\s]+$",name):
                 message=message+"corrupted traj data\n"
                 error=1
             if not re.search("^([01],){5}[01]$",used):
@@ -3097,7 +3097,7 @@ def loadChangesV4(path):
             if not re.search("^(([0-9]+,){24}[0-9]+;){23}([0-9]+,){24}[0-9]+$",traj):
                 message=message+"corrupted traj data\n"
                 error=1
-            if not re.search("^([a-zA-Z0-9\s]+,){5}[a-zA-Z0-9\s]+$",name):
+            if not re.search(r"^([a-zA-Z0-9\s]+,){5}[a-zA-Z0-9\s]+$",name):
                 message=message+"corrupted traj data\n"
                 error=1
             if not re.search("^([01],){5}[01]$",used):
@@ -3657,7 +3657,7 @@ def loadCode():
             code=[]
             for line in file:
                 l=line.rstrip("\n")
-                if not re.search("^[0-9a-fA-F]{8}\s[0-9a-fA-F]{8}$",l):
+                if not re.search(r"^[0-9a-fA-F]{8}\s[0-9a-fA-F]{8}$",l):
                     recapList.insert(tk.END,"unexpected gecko code (each line must be xxxxxxxx xxxxxxxx)\n")
                     recapList.configure(state="disabled")
                     return
